@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CTI — Escala</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1a56a0;--blue-l:#e8f1fb;--blue-m:#4d8fd1;--blue-d:#0d3a6e;
+  --w:#fff;--off:#f5f7fa;--b:#dce6f0;--tx:#1a2533;--mu:#6b7f96;
+  --gr:#1a9e6a;--gr-l:#e6f7f1;--am:#c47a1a;--am-l:#fdf3e3;
+  --rd:#c0392b;--rd-l:#fdecea;--pu:#7c3aed;--pu-l:#f3f0ff;
+  --r:8px;--rl:14px;--tr:0.16s ease;--sh:0 2px 16px rgba(26,86,160,0.09);
+  --nav:54px;--drawer:300px;
+}
+body{font-family:'Inter',sans-serif;background:var(--off);color:var(--tx);font-size:13px;line-height:1.5;overflow:hidden;height:100vh}
+
+/* LOGIN */
+#ls{display:flex;align-items:center;justify-content:center;height:100vh;background:linear-gradient(135deg,#f0f5fc 0%,#e8f1fb 100%)}
+.lw{width:360px}
+.lb{display:flex;align-items:center;gap:10px;margin-bottom:28px}
+.lbx{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--blue);color:#fff;font-size:20px;font-weight:700;flex-shrink:0}
+.lbt{font-size:17px;font-weight:600}.lbs{font-size:12px;color:var(--mu)}
+.lc{background:var(--w);border:1px solid var(--b);border-radius:var(--rl);padding:28px;box-shadow:var(--sh)}
+.lc h2{font-size:15px;font-weight:600;margin-bottom:4px}
+.lc p{font-size:12px;color:var(--mu);margin-bottom:22px}
+.fl{margin-bottom:14px}
+.fl label{display:block;font-size:11px;font-weight:500;color:var(--mu);margin-bottom:5px;text-transform:uppercase;letter-spacing:.4px}
+.fl input{width:100%;padding:9px 11px;border:1px solid var(--b);border-radius:var(--r);font-family:inherit;font-size:13px;color:var(--tx);outline:none;transition:var(--tr)}
+.fl input:focus{border-color:var(--blue-m);box-shadow:0 0 0 3px rgba(26,86,160,.09)}
+.lerr{font-size:11px;color:var(--rd);margin:-6px 0 10px;display:none}
+.lerr.show{display:block}
+.blg{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--r);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:var(--tr)}
+.blg:hover{background:var(--blue-d)}
+
+/* APP SHELL */
+#app{display:none;height:100vh;flex-direction:column}
+.nav{height:var(--nav);background:var(--w);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 20px;gap:14px;flex-shrink:0;z-index:50}
+.nav-ham{width:32px;height:32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;border-radius:6px;border:1px solid var(--b);background:var(--w);flex-shrink:0;transition:var(--tr)}
+.nav-ham:hover{background:var(--off)}
+.nav-ham span{display:block;width:14px;height:1.5px;background:var(--tx);border-radius:1px}
+.nav-logo{width:32px;height:32px;border-radius:6px;background:var(--blue);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
+.nav-title{font-size:13px;font-weight:600;flex:1}
+.nav-tabs{display:flex;gap:2px}
+.nt{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid transparent;background:transparent;color:var(--mu);transition:var(--tr);font-family:inherit}
+.nt:hover{background:var(--off);color:var(--tx)}
+.nt.active{background:var(--blue);color:#fff}
+.nav-user{display:flex;align-items:center;gap:8px;margin-left:8px}
+.nav-av{width:28px;height:28px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--blue)}
+.nav-nm{font-size:12px;font-weight:500}
+.btn-out{font-size:11px;color:var(--mu);cursor:pointer;padding:4px 10px;border-radius:6px;border:1px solid var(--b);background:var(--w);font-family:inherit;transition:var(--tr)}
+.btn-out:hover{border-color:var(--rd);color:var(--rd)}
+
+/* BODY LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden}
+
+/* DRAWER */
+.drawer{width:var(--drawer);background:var(--w);border-right:1px solid var(--b);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width var(--tr),opacity var(--tr);position:sticky;top:0;height:calc(100vh - var(--nav));align-self:flex-start}
+.drawer.closed{width:0;opacity:0;pointer-events:none}
+.drawer-inner{width:var(--drawer);display:flex;flex-direction:column;height:100%;overflow:hidden}
+.drawer-head{padding:16px 18px 12px;border-bottom:1px solid var(--b);flex-shrink:0}
+.drawer-head-title{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+.step-list{padding:10px;flex-shrink:0;border-bottom:1px solid var(--b)}
+.step-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);cursor:pointer;transition:var(--tr)}
+.step-item:hover{background:var(--off)}
+.step-item.active{background:var(--blue-l)}
+.step-item.done .si-num{background:var(--gr);color:#fff}
+.step-item.active .si-num{background:var(--blue);color:#fff}
+.step-item.disabled{opacity:.45;pointer-events:none}
+.si-num{width:22px;height:22px;border-radius:50%;background:var(--off);border:1px solid var(--b);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--mu);flex-shrink:0;transition:var(--tr)}
+.si-label{font-size:12px;font-weight:500}
+.si-sub{font-size:11px;color:var(--mu)}
+.funnel-wrap{padding:12px 14px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.funnel-head{font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;padding:4px 4px 8px;border-bottom:1px solid var(--b);margin-bottom:2px}
+.filt-group{margin-bottom:4px}
+.filt-label{font-size:11px;font-weight:500;color:var(--mu);margin-bottom:6px;display:block}
+.filt-input{width:100%;padding:7px 10px;border:1px solid var(--b);border-radius:var(--r);font-family:inherit;font-size:12px;outline:none;transition:var(--tr)}
+.filt-input:focus{border-color:var(--blue-m)}
+.filt-chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--b);background:var(--w);color:var(--mu);transition:var(--tr);font-family:inherit}
+.chip:hover{border-color:var(--blue-m);color:var(--blue)}
+.chip.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.chip-sm{padding:2px 7px;font-size:10px}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:24px}
+.tab-pane{display:none}.tab-pane.active{display:block}
+.screen{display:none}.screen.active{display:block}
+
+/* COMPONENTS */
+.card{background:var(--w);border:1px solid var(--b);border-radius:var(--rl);padding:20px;box-shadow:var(--sh);margin-bottom:16px}
+.card-title{font-size:14px;font-weight:600;margin-bottom:3px}
+.card-sub{font-size:12px;color:var(--mu);margin-bottom:16px}
+.tbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:var(--r);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--b);background:var(--w);color:var(--tx);transition:var(--tr)}
+.btn:hover{background:var(--off);border-color:var(--blue-m)}
+.bp{background:var(--blue);color:#fff;border-color:var(--blue)}.bp:hover{background:var(--blue-d);border-color:var(--blue-d)}
+.bs{background:var(--gr);color:#fff;border-color:var(--gr)}.bs:hover{background:#14845a}
+.bd{color:var(--rd);border-color:#f5c6c6}.bd:hover{background:var(--rd-l);border-color:var(--rd)}
+.bpu{background:var(--pu);color:#fff;border-color:var(--pu)}.bpu:hover{background:#6d28d9}
+.btn-sm{padding:4px 10px;font-size:11px}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr) 1.6fr;gap:10px;margin-bottom:20px}
+.sc{background:var(--w);border:1px solid var(--b);border-radius:var(--r);padding:12px 14px}
+.sl{font-size:11px;color:var(--mu);font-weight:500;margin-bottom:3px}
+.sv{font-size:20px;font-weight:600}.sv.bl{color:var(--blue)}.sv.gr{color:var(--gr)}
+.last-pres-item{display:flex;align-items:center;gap:6px;padding:3px 2px;border-bottom:1px solid var(--b);font-size:11px}
+.last-pres-item:last-child{border-bottom:none}
+.last-pres-av{width:18px;height:18px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:var(--blue);flex-shrink:0}
+.last-pres-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--tx)}
+.last-pres-role{font-size:9px;padding:1px 5px;border-radius:8px;background:var(--am-l);color:var(--am);font-weight:500;flex-shrink:0}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-size:11px;font-weight:500;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;padding:7px 10px;border-bottom:1px solid var(--b)}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--b);font-size:12px;vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tbody tr:hover td{background:var(--off)}
+.xbw{display:flex;align-items:center;gap:7px}
+.xb{height:3px;border-radius:2px;background:var(--b);flex:1;max-width:70px}
+.xf{height:100%;border-radius:2px;background:var(--blue)}
+.xf.mx{background:var(--gr)}
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500}
+.be{background:var(--gr-l);color:var(--gr)}.bg{background:var(--blue-l);color:var(--blue)}
+.bad{background:var(--am-l);color:var(--am)}.bu{background:var(--off);color:var(--mu)}
+.bpu-badge{background:var(--pu-l);color:var(--pu)}
+
+/* CHAMADA GRID */
+.cg{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:8px;max-height:calc(100vh - 260px);overflow-y:auto;padding-right:4px}
+.cc{background:var(--w);border:1px solid var(--b);border-radius:var(--r);padding:10px 12px;display:flex;align-items:center;gap:9px;cursor:pointer;transition:var(--tr)}
+.cc:hover{border-color:var(--blue-m);background:var(--blue-l)}
+.cc.sel{border-color:var(--blue);background:var(--blue-l)}
+.cav{width:30px;height:30px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:var(--blue);flex-shrink:0}
+.cch{margin-left:auto;color:var(--blue);font-size:13px;opacity:0}
+.cc.sel .cch{opacity:1}
+
+/* ESCALA GRID */
+.eg{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:12px}
+.esc{background:var(--w);border:1px solid var(--b);border-radius:var(--rl);padding:16px;transition:border-color .2s}
+.esc.drop-over{border-color:var(--blue-m);background:var(--blue-l)}
+.esc-name{font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between}
+.rr{display:flex;align-items:flex-start;gap:8px;padding:7px 0}
+.rr+.rr{border-top:1px solid var(--b)}
+.rl{font-size:10px;font-weight:500;color:var(--mu);width:62px;flex-shrink:0;padding-top:2px}
+.rp{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+.ra{width:24px;height:24px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:var(--blue);flex-shrink:0}
+.ra.g{background:#fef3e2;color:#b45309}
+.rn{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rx{font-size:10px;color:var(--mu)}
+.np{font-size:11px;color:var(--mu);font-style:italic}
+.cp-list{display:flex;flex-direction:column;gap:4px;flex:1}
+.cp-item{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:5px;cursor:grab;transition:background .15s;position:relative}
+.cp-item:hover{background:var(--off)}
+.cp-item.dragging{opacity:.4;cursor:grabbing}
+.cp-item .drag-handle{font-size:10px;color:var(--b);flex-shrink:0}
+.cp-item .cp-move-btn{margin-left:auto;font-size:9px;padding:1px 6px;border-radius:4px;border:1px solid var(--b);background:var(--w);color:var(--mu);cursor:pointer;font-family:inherit;transition:var(--tr);white-space:nowrap}
+.cp-item .cp-move-btn:hover{border-color:var(--blue-m);color:var(--blue)}
+
+/* OVERFLOW ALERT */
+.overflow-alert{background:var(--am-l);border:1px solid var(--am);border-radius:var(--r);padding:12px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.overflow-alert .oa-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.overflow-alert .oa-body{flex:1}
+.overflow-alert .oa-title{font-size:12px;font-weight:600;color:var(--am);margin-bottom:3px}
+.overflow-alert .oa-desc{font-size:11px;color:#7a5010;line-height:1.5}
+.unalloc-pill{display:inline-flex;align-items:center;gap:5px;background:var(--w);border:1px solid #f5c6c6;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:500;color:var(--rd)}
+
+/* MOVE MODAL */
+.move-select{width:100%;padding:8px 11px;border:1px solid var(--b);border-radius:var(--r);font-family:inherit;font-size:12px;margin-bottom:10px;outline:none}
+.move-select:focus{border-color:var(--blue-m)}
+
+/* ===== ESCALAS TAB ===== */
+.escalas-section{margin-bottom:28px}
+.escalas-section-title{font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--b)}
+.escalas-section-title .badge{font-size:11px}
+.escala-card{background:var(--w);border:1px solid var(--b);border-radius:var(--rl);padding:0;margin-bottom:12px;overflow:hidden;transition:box-shadow var(--tr),transform var(--tr)}
+.escala-card:hover{box-shadow:0 4px 20px rgba(26,86,160,0.12);transform:translateY(-1px)}
+.escala-card.aberta{border-left:4px solid var(--am)}
+.escala-card.fechada{border-left:4px solid var(--gr)}
+.ec-top{display:flex;align-items:center;gap:16px;padding:16px 20px}
+.ec-date-block{display:flex;flex-direction:column;align-items:center;justify-content:center;width:52px;height:52px;background:var(--blue-l);border-radius:10px;flex-shrink:0}
+.ec-date{font-size:22px;font-weight:700;color:var(--blue);line-height:1}
+.ec-month{font-size:10px;color:var(--blue);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.ec-sep{width:1px;background:var(--b);align-self:stretch;flex-shrink:0}
+.ec-body{flex:1;min-width:0}
+.ec-title{font-size:13px;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.ec-meta{font-size:11px;color:var(--mu);display:flex;gap:14px;flex-wrap:wrap}
+.ec-meta span{display:flex;align-items:center;gap:4px}
+.ec-actions{display:flex;gap:7px;flex-shrink:0;align-items:center}
+.ec-expand{width:100%;background:var(--off);border:none;border-top:1px solid var(--b);padding:8px 20px;font-family:inherit;font-size:11px;color:var(--mu);cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;transition:background var(--tr)}
+.ec-expand:hover{background:var(--blue-l);color:var(--blue)}
+.ec-colab-grid{display:none;flex-wrap:wrap;gap:6px;padding:12px 20px 16px;border-top:1px solid var(--b);background:var(--off)}
+.ec-colab-grid.open{display:flex}
+.ec-colab-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;background:var(--w);border:1px solid var(--b);border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;transition:var(--tr);position:relative}
+.ec-colab-pill:hover{border-color:var(--blue-m);background:var(--blue-l);color:var(--blue)}
+.ec-colab-pill .pill-av{width:20px;height:20px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--blue);flex-shrink:0}
+.ec-colab-pill.piloto .pill-av{background:var(--am-l);color:var(--am)}
+.ec-colab-pill .pill-badge{font-size:8px;padding:1px 5px;border-radius:10px;background:var(--blue-l);color:var(--blue);margin-left:2px}
+.ec-colab-pill.piloto .pill-badge{background:var(--am-l);color:var(--am)}
+/* Colaborador ticket detail panel */
+.colab-detail-panel{background:var(--w);border:1px solid var(--b);border-radius:var(--rl);padding:20px;margin-bottom:16px;box-shadow:var(--sh)}
+.cdp-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--b)}
+.cdp-av{width:40px;height:40px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--blue);flex-shrink:0}
+.cdp-name{font-size:14px;font-weight:600}
+.cdp-sub{font-size:11px;color:var(--mu);margin-top:1px}
+.cdp-stats{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap}
+.cdp-stat{text-align:center;background:var(--off);border-radius:8px;padding:8px 14px}
+.cdp-stat-val{font-size:18px;font-weight:700;color:var(--blue)}
+.cdp-stat-lbl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;font-weight:500}
+.cdp-tickets{max-height:280px;overflow-y:auto}
+.cdp-ticket{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--b);border-radius:7px;margin-bottom:5px;background:var(--w);transition:background var(--tr)}
+.cdp-ticket:hover{background:var(--blue-l)}
+.cdp-ticket-id{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--blue);font-weight:500;flex-shrink:0;width:60px}
+.cdp-ticket-title{flex:1;font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cdp-ticket-meta{font-size:10px;color:var(--mu);display:flex;gap:8px;flex-shrink:0;align-items:center}
+
+/* XP CRITERIA TABLE */
+.xp-criteria{border:1px solid var(--b);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.xp-criteria th{background:var(--off)}
+
+/* CHAMADAS IMPORT */
+.chamadas-container{max-height:calc(100vh - 320px);overflow-y:auto}
+.chamada-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--b);border-radius:var(--r);margin-bottom:6px;background:var(--w);transition:var(--tr)}
+.chamada-row:hover{border-color:var(--blue-m)}
+.chamada-row.matched{border-color:var(--gr);background:var(--gr-l)}
+.chamada-row.unmatched{border-color:var(--rd-l);background:var(--rd-l);opacity:.7}
+.ch-ticket{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--blue);font-weight:500;white-space:nowrap;flex-shrink:0;width:70px}
+.ch-body{flex:1;min-width:0}
+.ch-title{font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-meta{font-size:10px;color:var(--mu);display:flex;gap:8px;margin-top:2px;flex-wrap:wrap}
+.ch-xp{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--gr);flex-shrink:0;white-space:nowrap}
+.ch-select{padding:4px 8px;border:1px solid var(--b);border-radius:5px;font-family:inherit;font-size:11px;outline:none;width:140px;flex-shrink:0}
+.ch-select:focus{border-color:var(--blue-m)}
+
+/* IMPORT SUMMARY */
+.import-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.is-card{background:var(--w);border:1px solid var(--b);border-radius:var(--r);padding:12px;text-align:center}
+.is-val{font-size:22px;font-weight:700;margin-bottom:3px}
+.is-label{font-size:10px;color:var(--mu);font-weight:500;text-transform:uppercase;letter-spacing:.4px}
+
+/* XP BADGE COLORS */
+.xp-a{color:#7c3aed;background:var(--pu-l)}
+.xp-b{color:var(--blue);background:var(--blue-l)}
+.xp-c{color:var(--am);background:var(--am-l)}
+.xp-d{color:var(--mu);background:var(--off)}
+
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(10,20,40,.35);z-index:200;align-items:center;justify-content:center}
+.mbg.open{display:flex}
+.md{background:var(--w);border-radius:var(--rl);padding:24px;width:420px;max-width:92vw;box-shadow:0 8px 40px rgba(10,20,40,.16);max-height:90vh;overflow-y:auto}
+.md h3{font-size:14px;font-weight:600;margin-bottom:14px}
+.md input,.md select{width:100%;padding:8px 11px;border:1px solid var(--b);border-radius:var(--r);font-family:inherit;font-size:12px;margin-bottom:10px;outline:none;transition:var(--tr)}
+.md input:focus,.md select:focus{border-color:var(--blue-m)}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:6px}
+
+/* IMPORT MODAL */
+.import-modal{width:820px;max-width:96vw}
+
+/* TAG ROW */
+.tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px}
+.tag{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500;background:var(--blue-l);color:var(--blue);cursor:pointer;border:1px solid transparent;transition:var(--tr);font-family:inherit}
+.tag.active{background:var(--blue);color:#fff}
+
+/* DOCS */
+.ds{margin-bottom:28px}
+.ds h3{font-size:14px;font-weight:600;margin-bottom:10px;padding-bottom:9px;border-bottom:1px solid var(--b)}
+.ds p{font-size:12px;color:var(--mu);line-height:1.7;margin-bottom:8px}
+.dg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:10px}
+.dc{background:var(--off);border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.dc-t{font-size:12px;font-weight:600;margin-bottom:5px}
+.dc-b{font-size:11px;color:var(--mu);line-height:1.6}
+.dstep{display:flex;gap:12px;margin-bottom:14px;align-items:flex-start}
+.dsn{width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.dsb h4{font-size:12px;font-weight:600;margin-bottom:2px}
+.dsb p{font-size:11px;color:var(--mu);line-height:1.6}
+.pill-d{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:500;margin:2px 2px 0 0}
+
+/* CALENDAR */
+#tab-cal{height:calc(100vh - var(--nav) - 48px);display:none;flex-direction:column;gap:0}
+#tab-cal.active{display:flex}
+.cal-layout{display:flex;flex:1;gap:0;overflow:hidden}
+.cal-sidebar{width:280px;flex-shrink:0;background:var(--w);border-right:1px solid var(--b);display:flex;flex-direction:column;overflow:hidden}
+.cal-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--b);background:var(--w);flex-shrink:0}
+.cal-title{font-size:15px;font-weight:600}
+.cal-nav{display:flex;gap:6px;align-items:center}
+.cal-nav button{padding:5px 12px;border-radius:var(--r);border:1px solid var(--b);background:var(--w);font-family:inherit;font-size:12px;cursor:pointer;color:var(--tx);transition:var(--tr)}
+.cal-nav button:hover{background:var(--off)}
+.cal-grid-header{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--b);flex-shrink:0}
+.cal-dow{text-align:center;padding:8px 4px;font-size:10px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);flex:1;overflow-y:auto}
+.cal-cell{border-right:1px solid var(--b);border-bottom:1px solid var(--b);padding:6px;min-height:80px;cursor:pointer;transition:background .15s;position:relative;display:flex;flex-direction:column}
+.cal-cell:hover{background:var(--blue-l)}
+.cal-cell.other-month{opacity:.4}
+.cal-cell.today .cal-day-num{background:var(--blue);color:#fff;border-radius:50%}
+.cal-cell.has-escala{background:#f0f8f2}
+.cal-cell.has-escala:hover{background:#d9f0e5}
+.cal-cell.selected{background:var(--blue-l);border:1.5px solid var(--blue-m)}
+.cal-day-num{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;margin-bottom:4px;flex-shrink:0}
+.cal-ev-pill{background:var(--blue-l);color:var(--blue);border-radius:4px;font-size:9px;font-weight:500;padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-ev-pill.has-escala{background:var(--gr-l);color:var(--gr)}
+.cal-sidebar-head{padding:16px 16px 10px;border-bottom:1px solid var(--b);flex-shrink:0}
+.cal-sidebar-head h3{font-size:13px;font-weight:600}
+.cal-sidebar-sub{font-size:11px;color:var(--mu);margin-top:2px}
+.cal-detail{flex:1;overflow-y:auto;padding:12px 14px}
+.cal-empty{text-align:center;padding:40px 20px;color:var(--mu);font-size:12px}
+.cal-actions{padding:12px 14px;border-top:1px solid var(--b);flex-shrink:0;display:flex;gap:8px;flex-direction:column}
+.cal-mini-av{width:18px;height:18px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:600;color:var(--blue);flex-shrink:0}
+.cal-mini-av.g{background:#fef3e2;color:#b45309}
+.cal-mini-name{font-size:10px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cal-team-card{background:var(--w);border:1px solid var(--b);border-radius:var(--r);padding:10px 12px;margin-bottom:6px}
+.cal-team-name{font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.cal-pilot-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid var(--b)}
+.cal-pilot-label{font-size:9px;color:var(--mu);font-weight:500;width:50px;flex-shrink:0}
+.cal-cp-row{display:flex;align-items:center;gap:6px;padding:2px 0}
+.cal-cp-label{font-size:9px;color:var(--mu);font-weight:500;width:50px;flex-shrink:0}
+.cal-move-btn{font-size:8px;padding:1px 5px;border-radius:3px;border:1px solid var(--b);background:var(--w);color:var(--mu);cursor:pointer;font-family:inherit;white-space:nowrap}
+.cal-move-btn:hover{border-color:var(--blue-m);color:var(--blue)}
+.cal-cp-list-item{display:flex;align-items:center;gap:6px;padding:2px 4px;border-radius:4px;cursor:grab}
+.cal-cp-list-item:hover{background:var(--off)}
+.cal-unalloc{background:var(--rd-l);border:1px solid #f5c6c6;border-radius:var(--r);padding:10px 12px;margin-bottom:10px}
+.cal-unalloc-title{font-size:11px;font-weight:600;color:var(--rd);margin-bottom:6px}
+
+/* DATE PICKER MODAL */
+.date-picker-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:10px}
+.dpk-dow{text-align:center;font-size:9px;font-weight:600;color:var(--mu);text-transform:uppercase;padding:3px}
+.dpk-cell{text-align:center;padding:5px 2px;border-radius:6px;cursor:pointer;font-size:11px;transition:background var(--tr);border:1px solid transparent}
+.dpk-cell:hover{background:var(--blue-l);color:var(--blue)}
+.dpk-cell.other{opacity:.3;cursor:default;pointer-events:none}
+.dpk-cell.today{font-weight:700;color:var(--blue)}
+.dpk-cell.picked{background:var(--blue);color:#fff;border-color:var(--blue)}
+.dpk-cell.has-esc{background:var(--gr-l);color:var(--gr)}
+.dpk-cell.has-esc.picked{background:var(--blue);color:#fff}
+.dpk-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.dpk-nav button{padding:4px 10px;border-radius:6px;border:1px solid var(--b);background:var(--w);font-family:inherit;font-size:11px;cursor:pointer;transition:var(--tr)}
+.dpk-nav button:hover{background:var(--off)}
+.dpk-title{font-size:13px;font-weight:600}
+.dpk-selected-lbl{font-size:12px;color:var(--blue);font-weight:500;margin-top:10px;padding:8px 12px;background:var(--blue-l);border-radius:var(--r);display:none}
+.dpk-selected-lbl.show{display:block}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--tx);color:#fff;padding:9px 16px;border-radius:var(--r);font-size:12px;opacity:0;transform:translateY(6px);transition:all .22s;z-index:300;pointer-events:none;max-width:300px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.tg{background:var(--gr)}.toast.tr{background:var(--rd)}
+
+/* SCROLL */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--b);border-radius:2px}
+.tbl-wrap{overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 310px)}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--mu)}
+.empty-state .es-icon{font-size:36px;margin-bottom:12px}
+.empty-state h3{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:6px}
+.empty-state p{font-size:12px;line-height:1.6}
+
+/* FILE DROP ZONE */
+.drop-zone{border:2px dashed var(--b);border-radius:var(--rl);padding:32px;text-align:center;transition:var(--tr);cursor:pointer}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--blue-m);background:var(--blue-l)}
+.drop-zone .dz-icon{font-size:28px;margin-bottom:8px}
+.drop-zone p{font-size:12px;color:var(--mu);margin-bottom:8px}
+.drop-zone strong{font-size:12px;color:var(--blue)}
+
+/* PROGRESS BAR */
+.prog-bar{height:6px;background:var(--b);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.prog-fill{height:100%;border-radius:3px;background:var(--blue);transition:width .4s}
+
+/* SEPARATOR */
+.sep{height:1px;background:var(--b);margin:16px 0}
+
+/* FILTER TAG ROW */
+.filter-tabs{display:flex;gap:2px;padding:0 0 12px}
+.filter-tab{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--b);background:var(--w);color:var(--mu);transition:var(--tr);font-family:inherit}
+.filter-tab:hover{background:var(--off)}
+.filter-tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* FORTINET LEVELS */
+.fortinet-levels{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--b)}
+.fortinet-levels-title{font-size:10px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.fortinet-level-row{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;border:1px solid var(--b);background:var(--off)}
+.fl-badge{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.fl-a{background:#fde8e8;color:#c0392b}.fl-b{background:#fdf3e3;color:#c47a1a}.fl-c{background:#e8f1fb;color:#1a56a0}.fl-d{background:#e6f7f1;color:#1a9e6a}.fl-e{background:var(--pu-l);color:var(--pu)}
+.fl-info{flex:1;min-width:0}
+.fl-label{font-size:11px;font-weight:600;color:var(--tx)}
+.fl-time{font-size:10px;color:var(--mu)}
+.fl-copilotos{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.fl-copiloto-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--w);border:1px solid var(--b);border-radius:10px;font-size:10px;font-weight:500}
+
+/* SUPERVISOR CONTROLS IN IMPORT */
+.sup-ctrl{display:flex;align-items:center;gap:6px;flex-shrink:0}
+
+/* SORT BUTTONS */
+.sort-bar{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.sort-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--b);background:var(--w);color:var(--mu);transition:var(--tr);font-family:inherit}
+.sort-btn:hover{border-color:var(--blue-m);color:var(--blue)}
+.sort-btn.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.sort-btn .sort-arrow{font-size:9px;opacity:.7}
+
+
+/* STICKY FUNNEL */
+.funnel-wrap{padding:12px 14px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;position:sticky;top:0}
+.drawer-inner{width:var(--drawer);display:flex;flex-direction:column;height:100%;overflow:hidden;position:sticky;top:0}
+
+/* FORTINET MODAL ALL SERVICES */
+.forti-modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;max-height:70vh;overflow-y:auto}
+.forti-modal-card{background:var(--off);border:1px solid var(--b);border-radius:var(--r);padding:10px 12px}
+.forti-modal-card-title{font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--b)}
+
+/* FORTINET TOGGLE ARROW on grid cards */
+.forti-toggle{background:none;border:none;cursor:pointer;font-size:11px;color:var(--mu);padding:2px 5px;border-radius:4px;transition:var(--tr);flex-shrink:0;margin-left:4px}
+.forti-toggle:hover{background:var(--blue-l);color:var(--blue)}
+.forti-extra-panel{margin-top:8px;padding-top:8px;border-top:1px solid var(--b)}
+.xp-input{width:58px;padding:3px 6px;border:1px solid var(--b);border-radius:5px;font-family:inherit;font-size:12px;font-weight:700;color:var(--gr);text-align:center;outline:none;transition:var(--tr)}
+.xp-input:focus{border-color:var(--gr);box-shadow:0 0 0 2px rgba(26,158,106,.12)}
+.xp-input.edited{border-color:var(--am);color:var(--am)}
+.sup-badge{font-size:9px;padding:1px 5px;border-radius:8px;background:var(--pu-l);color:var(--pu);font-weight:600;flex-shrink:0}
+.chamada-row{flex-wrap:wrap}
+.chamada-row .desc-edit{display:none;width:100%;margin-top:6px;padding:8px 10px;border:1.5px solid var(--blue-m);border-radius:6px;font-family:inherit;font-size:12px;line-height:1.5;background:#fff;color:var(--tx);outline:none;resize:vertical;min-height:60px;box-shadow:0 0 0 3px rgba(26,86,160,.07)}
+.chamada-row .desc-edit.show{display:block}
+.chamada-row .desc-edit:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(26,86,160,.13)}
+.btn-del-ticket{padding:3px 7px;font-size:10px;border:1px solid #f5c6c6;border-radius:5px;background:var(--w);color:var(--rd);cursor:pointer;font-family:inherit;transition:var(--tr);flex-shrink:0}
+.btn-del-ticket:hover{background:var(--rd-l);border-color:var(--rd)}
+.btn-edit-desc{padding:3px 7px;font-size:10px;border:1px solid var(--b);border-radius:5px;background:var(--w);color:var(--mu);cursor:pointer;font-family:inherit;transition:var(--tr);flex-shrink:0}
+.btn-edit-desc:hover{background:var(--blue-l);border-color:var(--blue-m);color:var(--blue)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="ls">
+  <div class="lw">
+    <div class="lb">
+      <div class="lbx">CTI</div>
+      <div><div class="lbt">Sistema de Escala</div><div class="lbs">Operações & Capacitação</div></div>
+    </div>
+    <div class="lc">
+      <h2>Acesso restrito</h2>
+      <p>Entre com seu e-mail profissional e senha.</p>
+      <div class="fl"><label>E-mail</label><input id="le" type="email" placeholder="nome@cti.com" autocomplete="email" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fl"><label>Senha</label><input id="lp" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="lerr" id="lerr">E-mail ou senha incorretos.</div>
+      <button class="blg" onclick="doLogin()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;flex-direction:column">
+  <nav class="nav">
+    <button class="nav-ham" id="ham" onclick="toggleDrawer()"><span></span><span></span><span></span></button>
+    <div class="nav-logo">CTI</div>
+    <div class="nav-title">Sistema de Escala</div>
+    <div class="nav-tabs">
+      <button class="nt active" onclick="switchTab('op')" id="nt-op">Operações</button>
+      <button class="nt" onclick="switchTab('escalas')" id="nt-escalas">Escalas</button>
+      <button class="nt" onclick="switchTab('cal')" id="nt-cal">Calendário</button>
+      <button class="nt" onclick="switchTab('us')" id="nt-us" style="display:none">Usuários</button>
+      <button class="nt" onclick="switchTab('doc')" id="nt-doc">Como funciona</button>
+    </div>
+    <div class="nav-user">
+      <div class="nav-av" id="nav-av">?</div>
+      <span class="nav-nm" id="nav-nm"></span>
+      <button class="btn-out" onclick="doLogout()">Sair</button>
+    </div>
+  </nav>
+
+  <div class="app-body">
+    <!-- DRAWER -->
+    <div class="drawer" id="drawer">
+      <div class="drawer-inner">
+        <div id="drawer-steps">
+          <div class="drawer-head"><div class="drawer-head-title">Etapas do dia</div></div>
+          <div class="step-list">
+            <div class="step-item active" id="si-0" onclick="goTo(0)">
+              <div class="si-num" id="sn-0">1</div>
+              <div><div class="si-label">Gestão</div><div class="si-sub">Equipe técnica</div></div>
+            </div>
+            <div class="step-item disabled" id="si-1" onclick="goTo(1)">
+              <div class="si-num" id="sn-1">2</div>
+              <div><div class="si-label">Chamada</div><div class="si-sub">Quem está presente</div></div>
+            </div>
+            <div class="step-item disabled" id="si-2" onclick="goTo(2)">
+              <div class="si-num" id="sn-2">3</div>
+              <div><div class="si-label">Grid</div><div class="si-sub">Escala do dia</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="funnel-wrap" id="drawer-funnel">
+          <div class="funnel-head">Filtros</div>
+          <div id="funnel-content"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content" id="main-content">
+
+      <!-- TAB: OPERAÇÕES -->
+      <div class="tab-pane active" id="tab-op">
+        <!-- S0: GESTÃO -->
+        <div class="screen active" id="sc-0">
+          <div class="stats-row">
+            <div class="sc"><div class="sl">Total de técnicos</div><div class="sv bl" id="st-tot">0</div></div>
+            <div class="sc"><div class="sl">Especialistas</div><div class="sv gr" id="st-esp">0</div></div>
+            <div class="sc"><div class="sl">Serviços mapeados</div><div class="sv" id="st-serv">18</div></div>
+            <div class="sc" id="sc-last-escala" style="position:relative;min-height:64px;padding:10px 12px">
+              <div class="sl" style="margin-bottom:5px">Última escala — presentes</div>
+              <div id="st-last-presentes" style="display:flex;flex-direction:column;gap:0;max-height:140px;overflow-y:auto;scrollbar-width:thin">
+                <span style="font-size:11px;color:var(--mu);font-style:italic">Nenhuma escala salva ainda.</span>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-bottom:0">
+            <div class="tbar">
+              <div><div class="card-title">Equipe técnica</div><div class="card-sub">Proficiência e especialidades por colaborador</div></div>
+              <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">
+                <div class="sort-bar">
+                  <span style="font-size:10px;color:var(--mu);font-weight:500">Ordenar:</span>
+                  <button class="sort-btn active" id="sort-nome" onclick="setSort('nome')">Nome <span class="sort-arrow" id="sa-nome">↑</span></button>
+                  <button class="sort-btn" id="sort-xp" onclick="setSort('xp')">Experiência <span class="sort-arrow" id="sa-xp">↕</span></button>
+                  <button class="sort-btn" id="sort-serv" onclick="setSort('serv')">Serviços <span class="sort-arrow" id="sa-serv">↕</span></button>
+                </div>
+                <button class="btn btn-sm" id="btn-add-colab" onclick="openMd('add')">+ Técnico</button>
+                <button class="btn btn-sm bp" onclick="goTo(1)">Iniciar chamada →</button>
+              </div>
+            </div>
+            <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Técnico</th><th>Especialidades</th><th>XP total</th><th>Status</th><th id="th-act"></th></tr></thead><tbody id="tb"></tbody></table></div>
+          </div>
+        </div>
+
+        <!-- S1: CHAMADA -->
+        <div class="screen" id="sc-1">
+          <div class="card" style="margin-bottom:0">
+            <div class="tbar">
+              <div><div class="card-title">Chamada matinal</div><div class="card-sub">Selecione quem está presente hoje</div></div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div class="sort-bar">
+                  <button class="sort-btn active" id="csort-nome" onclick="setChamadaSort('nome')">Nome <span id="csa-nome">↑</span></button>
+                  <button class="sort-btn" id="csort-xp" onclick="setChamadaSort('xp')">XP <span id="csa-xp">↕</span></button>
+                  <button class="sort-btn" id="csort-serv" onclick="setChamadaSort('serv')">Especialidades <span id="csa-serv">↕</span></button>
+                </div>
+                <input id="chamada-search" class="filt-input" style="width:180px;padding:6px 10px;font-size:12px" placeholder="🔍 Buscar colaborador..." oninput="renderChamada()">
+                <span id="pc" style="font-size:12px;color:var(--mu)">0 selecionados</span>
+                <button class="btn btn-sm" onclick="toggleAll()">Todos</button>
+                <button class="btn btn-sm bp" id="btn-gerar" onclick="gerarEscala()" disabled>Gerar escala →</button>
+              </div>
+            </div>
+            <div class="cg" id="cg"></div>
+          </div>
+        </div>
+
+        <!-- S2: GRID -->
+        <div class="screen" id="sc-2">
+          <div class="tbar">
+            <div><div class="card-title">Grid operacional</div><div style="font-size:12px;color:var(--mu)">Piloto = especialista de maior XP · Co-piloto = técnico em desenvolvimento (máx. 5) · <strong>Arraste</strong> co-pilotos entre setores ou use o botão ↔ · Clique em <strong>▸ SLA</strong> em qualquer card para ver classificação</div></div>
+            <div style="display:flex;gap:7px">
+              <button class="btn btn-sm" onclick="goTo(1)">← Chamada</button>
+              <button class="btn btn-sm" onclick="openMd('sla-global')" title="Classificação SLA de todos os setores">🔒 Ver todos SLA</button>
+              <button class="btn btn-sm bs" onclick="salvarEscalaAtual()">✓ Salvar escala</button>
+            </div>
+          </div>
+          <div id="overflow-zone"></div>
+          <div class="tag-row" id="ftags"></div>
+          <div class="eg" id="eg"></div>
+        </div>
+      </div><!-- /tab-op -->
+
+      <!-- TAB: ESCALAS -->
+      <div class="tab-pane" id="tab-escalas">
+        <div class="tbar" style="margin-bottom:8px">
+          <div>
+            <div class="card-title">Escalas</div>
+            <div class="card-sub">Gerencie escalas abertas e fechadas — clique num colaborador para ver seus tickets</div>
+          </div>
+          <div id="escalas-summary-chips" style="display:flex;gap:8px;align-items:center"></div>
+        </div>
+        <div class="filter-tabs" id="escalas-filter-tabs">
+          <button class="filter-tab active" onclick="setEscalasFilter('abertas')" id="ft-abertas">Abertas</button>
+          <button class="filter-tab" onclick="setEscalasFilter('fechadas')" id="ft-fechadas">Fechadas</button>
+          <button class="filter-tab" onclick="setEscalasFilter('todas')" id="ft-todas">Todas</button>
+        </div>
+        <div id="colab-detail-container"></div>
+        <div id="escalas-list"></div>
+      </div>
+
+      <!-- TAB: CALENDÁRIO -->
+      <div class="tab-pane" id="tab-cal" style="padding:0;height:calc(100vh - 54px);display:none;flex-direction:column">
+        <div class="cal-layout">
+          <div class="cal-main">
+            <div class="cal-header">
+              <div class="cal-title" id="cal-title">Janeiro 2026</div>
+              <div class="cal-nav">
+                <button onclick="calPrev()">‹ Anterior</button>
+                <button onclick="calToday()">Hoje</button>
+                <button onclick="calNext()">Próximo ›</button>
+              </div>
+            </div>
+            <div class="cal-grid-header">
+              <div class="cal-dow">Dom</div><div class="cal-dow">Seg</div><div class="cal-dow">Ter</div>
+              <div class="cal-dow">Qua</div><div class="cal-dow">Qui</div><div class="cal-dow">Sex</div><div class="cal-dow">Sáb</div>
+            </div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+          <div class="cal-sidebar">
+            <div class="cal-sidebar-head">
+              <h3 id="cal-side-title">Selecione um dia</h3>
+              <div class="cal-sidebar-sub" id="cal-side-sub">Clique em qualquer data para ver a escala associada.</div>
+            </div>
+            <div class="cal-detail" id="cal-detail"><div class="cal-empty"><div style="font-size:28px;margin-bottom:8px">📅</div><div>Selecione um dia no calendário para visualizar a escala.</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: USUÁRIOS -->
+      <div class="tab-pane" id="tab-us">
+        <div class="card" style="margin-bottom:0">
+          <div class="tbar">
+            <div><div class="card-title">Gerenciamento de acesso</div><div class="card-sub">Somente admins podem criar e gerenciar usuários</div></div>
+            <button class="btn btn-sm bp" onclick="openMd('user')">+ Novo usuário</button>
+          </div>
+          <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Usuário</th><th>E-mail</th><th>Perfil</th><th>Status</th><th></th></tr></thead><tbody id="utb"></tbody></table></div>
+        </div>
+      </div>
+
+      <!-- TAB: DOCS -->
+      <div class="tab-pane" id="tab-doc">
+        <div class="card" style="margin-bottom:0">
+          <div class="ds">
+            <h3>Visão geral</h3>
+            <p>O Sistema de Escala da CTI organiza automaticamente a equipe técnica diária com base em proficiência acumulada (XP). O XP agora é creditado de forma diretamente proporcional à <strong>dificuldade e quantidade de chamadas</strong> atendidas no dia, após importação do relatório de tickets.</p>
+          </div>
+          <div class="ds">
+            <h3>As 3 etapas de operação diária</h3>
+            <div class="dstep"><div class="dsn">1</div><div class="dsb"><h4>Gestão</h4><p>Visualize e gerencie a equipe. Admins podem cadastrar técnicos e resetar XP por serviço.</p></div></div>
+            <div class="dstep"><div class="dsn">2</div><div class="dsb"><h4>Chamada matinal</h4><p>Marque quem está presente no dia. Apenas os marcados participam da alocação.</p></div></div>
+            <div class="dstep"><div class="dsn">3</div><div class="dsb"><h4>Grid operacional</h4><p>Escala gerada automaticamente. Cada serviço recebe um <strong>Piloto</strong> (especialista) e até <strong>5 Co-pilotos</strong>. Salve a escala — ela vai para a aba <strong>Escalas</strong> como "aberta".</p></div></div>
+          </div>
+          <div class="ds">
+            <h3>Creditação de XP via importação de chamadas</h3>
+            <div class="dstep"><div class="dsn">4</div><div class="dsb"><h4>Importar chamadas</h4><p>Na aba <strong>Escalas → Abertas</strong>, clique em <em>"Importar chamadas"</em> para carregar o relatório Excel do dia. O sistema associa automaticamente cada ticket ao co-piloto presente naquele setor, calculando XP proporcional.</p></div></div>
+            <div class="dstep"><div class="dsn">5</div><div class="dsb"><h4>Revisão e associação manual</h4><p>Tickets não associados automaticamente podem ser vinculados manualmente a qualquer técnico presente. Você pode ajustar qualquer associação antes de confirmar.</p></div></div>
+            <div class="dstep"><div class="dsn">6</div><div class="dsb"><h4>Fechar escala</h4><p>Confirme os créditos. O XP é aplicado, a escala passa para "fechada" e promoções automáticas são processadas.</p></div></div>
+          </div>
+          <div class="ds">
+            <h3>Critérios de XP por chamada</h3>
+            <p>O XP por chamada é calculado com base na <strong>classificação do ticket</strong> (campo "classificacao" do relatório), na <strong>categoria</strong> e no <strong>tempo de duração</strong>:</p>
+            <table class="tbl xp-criteria" style="margin-top:10px">
+              <thead><tr><th>Classificação</th><th>Descrição</th><th>XP base</th><th>Multiplicador</th></tr></thead>
+              <tbody>
+                <tr><td><span class="badge xp-a">A</span></td><td>Crítico / Alta complexidade</td><td>8 XP</td><td>×2.0 se "Problema"</td></tr>
+                <tr><td><span class="badge xp-b">B</span></td><td>Médio / Complexidade razoável</td><td>5 XP</td><td>×1.5 se "Problema"</td></tr>
+                <tr><td><span class="badge xp-c">C</span></td><td>Baixo / Solicitação simples</td><td>3 XP</td><td>×1.0</td></tr>
+                <tr><td><span class="badge xp-d">D</span></td><td>Informativo</td><td>1 XP</td><td>×1.0</td></tr>
+                <tr><td><span class="badge" style="background:var(--pu-l);color:var(--pu)">E</span></td><td>Urgente / Imediato (Fortinet)</td><td>1 XP</td><td>×1.0</td></tr>
+              </tbody>
+            </table>
+            <p style="margin-top:10px">Tickets com duração ≥ 30 min ganham <strong>+2 XP adicional</strong>. Tickets com <em>problema_nosso = SIM</em> ganham <strong>+1 XP adicional</strong>.</p>
+          </div>
+          <div class="ds" style="margin-bottom:0">
+            <h3>Perfis de acesso</h3>
+            <div class="dg">
+              <div class="dc"><div class="dc-t"><span class="badge bad" style="margin-right:5px">Admin</span>Administrador</div><div class="dc-b">Acesso total: operações, importação de XP, reset de XP, criação e gestão de usuários. Pode editar chamados, excluir tickets e ajustar XP manualmente.</div></div>
+              <div class="dc"><div class="dc-t"><span class="badge bpu-badge" style="margin-right:5px">Supervisor</span>Supervisor</div><div class="dc-b">Todas as funcionalidades operacionais — chamada, grid, importação, fechamento — sem acesso à aba de Usuários. Pode editar descrição de chamados, excluir tickets e ajustar XP manualmente durante importação.</div></div>
+              <div class="dc"><div class="dc-t"><span class="badge bu" style="margin-right:5px">Colaborador</span>Colaborador</div><div class="dc-b">Acesso somente à aba Calendário para visualizar escalas do dia. Sem acesso a operações ou importação.</div></div>
+            </div>
+          </div>
+          <div class="ds" style="margin-bottom:0">
+            <h3>Fortinet — 5 Níveis de Atendimento</h3>
+            <p>O card Fortinet exibe 5 faixas de SLA para organização interna da equipe:</p>
+            <table class="tbl" style="margin-top:10px">
+              <thead><tr><th>Nível</th><th>Tempo máximo</th><th>Descrição</th></tr></thead>
+              <tbody>
+                <tr><td><span class="fl-badge fl-a" style="display:inline-flex">A</span></td><td>1 semana</td><td>Projetos / máxima complexidade</td></tr>
+                <tr><td><span class="fl-badge fl-b" style="display:inline-flex">B</span></td><td>1 dia</td><td>Alta complexidade</td></tr>
+                <tr><td><span class="fl-badge fl-c" style="display:inline-flex">C</span></td><td>Até 3 horas</td><td>Complexidade média</td></tr>
+                <tr><td><span class="fl-badge fl-d" style="display:inline-flex">D</span></td><td>Até 1 hora</td><td>Baixa complexidade</td></tr>
+                <tr><td><span class="fl-badge fl-e" style="display:inline-flex">E</span></td><td>Até 10 min</td><td>Urgente / atendimento imediato</td></tr>
+              </tbody>
+            </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /app-body -->
+</div><!-- /app -->
+
+<!-- MODALS -->
+<div class="mbg" id="md-add"><div class="md">
+  <h3>Novo técnico</h3>
+  <input id="mn" placeholder="Nome completo" onkeydown="if(event.key==='Enter')addColab()">
+  <div class="ma"><button class="btn" onclick="closeMd('add')">Cancelar</button><button class="btn bp" onclick="addColab()">Cadastrar</button></div>
+</div></div>
+
+<div class="mbg" id="md-reset"><div class="md">
+  <h3>Resetar XP</h3>
+  <p style="font-size:12px;color:var(--mu);margin-bottom:10px" id="rs-sub"></p>
+  <select id="rs-serv"></select>
+  <div class="ma"><button class="btn" onclick="closeMd('reset')">Cancelar</button><button class="btn bd" onclick="confirmReset()">Resetar</button></div>
+</div></div>
+
+<div class="mbg" id="md-user"><div class="md">
+  <h3>Novo usuário</h3>
+  <input id="un" placeholder="Nome completo">
+  <input id="ue" type="email" placeholder="email@cti.com">
+  <input id="up" type="password" placeholder="Senha">
+  <select id="ur"><option value="colaborador">Colaborador (só calendário)</option><option value="supervisor">Supervisor (sem gestão de usuários)</option><option value="admin">Administrador (acesso total)</option></select>
+  <div class="ma"><button class="btn" onclick="closeMd('user')">Cancelar</button><button class="btn bp" onclick="addUser()">Criar acesso</button></div>
+</div></div>
+
+<div class="mbg" id="md-move"><div class="md">
+  <h3 id="move-title">Mover colaborador</h3>
+  <p style="font-size:12px;color:var(--mu);margin-bottom:12px" id="move-sub"></p>
+  <select class="move-select" id="move-dest"></select>
+  <div class="ma">
+    <button class="btn" onclick="closeMd('move')">Cancelar</button>
+    <button class="btn bp" onclick="confirmMove()">Mover</button>
+  </div>
+</div></div>
+
+<!-- DATE PICKER MODAL -->
+<div class="mbg" id="md-datepicker"><div class="md" style="width:360px">
+  <h3>Selecionar data da escala</h3>
+  <p style="font-size:12px;color:var(--mu);margin-bottom:14px">Escolha o dia ao qual esta escala será atribuída.</p>
+  <div class="dpk-nav">
+    <button onclick="dpkPrev()">‹</button>
+    <span class="dpk-title" id="dpk-title"></span>
+    <button onclick="dpkNext()">›</button>
+  </div>
+  <div class="date-picker-grid" id="dpk-grid"></div>
+  <div class="dpk-selected-lbl" id="dpk-selected-lbl"></div>
+  <div class="ma" style="margin-top:14px">
+    <button class="btn" onclick="closeMd('datepicker')">Cancelar</button>
+    <button class="btn bp" id="dpk-confirm" onclick="confirmarDataEscala()" disabled>Salvar escala</button>
+  </div>
+</div></div>
+
+<!-- IMPORT CHAMADAS MODAL -->
+<div class="mbg" id="md-import"><div class="md import-modal">
+  <h3 id="import-title">Importar chamadas do dia</h3>
+  <div id="import-body"></div>
+  <div class="ma" id="import-actions">
+    <button class="btn" onclick="closeMd('import')">Cancelar</button>
+  </div>
+</div></div>
+
+<!-- ESCALA DETAIL MODAL -->
+<div class="mbg" id="md-escala-detail"><div class="md" style="width:700px;max-width:96vw">
+  <h3 id="ed-title">Detalhes da escala</h3>
+  <div id="ed-body"></div>
+  <div class="ma">
+    <button class="btn" onclick="closeMd('escala-detail')">Fechar</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SLA GLOBAL MODAL -->
+<div class="mbg" id="md-sla-global"><div class="md" style="width:820px;max-width:96vw">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+    <h3 style="margin:0">🔒 Classificação SLA — Todos os Setores</h3>
+    <button class="btn btn-sm" onclick="closeMd('sla-global')">✕ Fechar</button>
+  </div>
+  <p style="font-size:12px;color:var(--mu);margin-bottom:14px">Distribuição dos colaboradores por nível de SLA em cada setor da escala atual. Níveis baseados na sequência de co-pilotos alocados.</p>
+  <div id="sla-global-body" class="forti-modal-grid"></div>
+</div></div>
+
+<script>
+// ─── DADOS ────────────────────────────────────────────────
+const SERVICOS=["Acesso Dedicado","Acesso Link Comercio","Analise Vulnerabilidade","Antispam","Antivirus","Backup","Cloud - Serv. Virtual","Co-Location","E-mail","FTP","Fortinet","Hospedagem","SMTP","SonicWall","Suporte a servidores","Trust-Mail","WiFi+","ZABBIX"];
+let COLABS=["3 - NJ2","3 - Netclick","3 - RP1","3 - RP2","3 - RR","Allan","André","Arnizal","Arthur","Breno Gabriel","Bruno","Camila","Carlos Alberto","Cleverton","Daniel","Danilo","Davi","Eduardo","Elaine","Emerson","Endrew","Ermerson","Felipe","Fernanda","Flavio","Gabriel","Guilherme Coelho","Gustavo","Gustavo Avelar","Hillara Rafaela","Isabella","Janaina","Jeferson","Jeison","Jhennifer","José","João","João Paulo","João Pedro","João Victor","Jéssica","Júlio","Karina","Kaue","Laryssa","Lucas","Marcia","Marcio Takeshi","Marcos","Matheus","Matheus Vieira","Mauro","Miriam","Nicolas","Pedro","Pedro Gregory","Rafael Gomes","Rayane","Reinaldo","Renan","Renato","Ricardo Cauê","Robson","Rodolfo","Stephanie","Supernova","Thiago","Tiago","Victor","Vinicius","Vitor","Wenderson Do Nascimento","Wesley","Wilhard","Yuri","imcnet"];
+const XP_SEED={"3 - NJ2":{"Fortinet":26,"SonicWall":1},"3 - Netclick":{"Acesso Dedicado":10,"Antivirus":6,"Backup":13,"Cloud - Serv. Virtual":5,"Fortinet":14,"SMTP":3,"Suporte a servidores":1,"WiFi+":1},"3 - RP1":{"Acesso Dedicado":2,"Antivirus":8,"SonicWall":6},"3 - RP2":{"WiFi+":1},"3 - RR":{"Hospedagem":1},"Allan":{"Acesso Dedicado":999,"Acesso Link Comercio":27,"E-mail":7,"Fortinet":2,"Hospedagem":1,"SonicWall":2},"André":{"Acesso Dedicado":8,"Acesso Link Comercio":1},"Arnizal":{"Acesso Dedicado":24,"Cloud - Serv. Virtual":1,"E-mail":25,"Fortinet":4,"Hospedagem":6,"Suporte a servidores":1,"WiFi+":1},"Arthur":{"Acesso Dedicado":11},"Breno Gabriel":{"Acesso Dedicado":5},"Bruno":{"Acesso Dedicado":35,"Antispam":1,"Cloud - Serv. Virtual":1,"Co-Location":7,"Fortinet":3,"Hospedagem":1},"Camila":{"Acesso Dedicado":4,"E-mail":1},"Carlos Alberto":{"Acesso Dedicado":4,"Fortinet":2},"Cleverton":{"Acesso Dedicado":9,"Analise Vulnerabilidade":1,"Antivirus":38,"Cloud - Serv. Virtual":7,"E-mail":2,"Fortinet":782,"Hospedagem":3,"SMTP":2,"SonicWall":42,"Suporte a servidores":2,"WiFi+":15},"Daniel":{"Acesso Dedicado":3,"Cloud - Serv. Virtual":2,"Fortinet":3,"SonicWall":1},"Danilo":{"Acesso Dedicado":139,"Acesso Link Comercio":1,"Antispam":34,"Antivirus":18,"Backup":275,"Cloud - Serv. Virtual":78,"E-mail":645,"FTP":1,"Fortinet":514,"Hospedagem":240,"SMTP":21,"SonicWall":18,"Suporte a servidores":6,"Trust-Mail":52,"WiFi+":4},"Davi":{"Acesso Dedicado":122,"Antispam":9,"Antivirus":60,"Backup":50,"Cloud - Serv. Virtual":29,"E-mail":220,"Fortinet":135,"Hospedagem":82,"SMTP":2,"SonicWall":8,"Suporte a servidores":1,"Trust-Mail":2,"WiFi+":3,"ZABBIX":1},"Eduardo":{"Acesso Dedicado":25,"E-mail":1,"WiFi+":2},"Elaine":{"Acesso Dedicado":1,"Acesso Link Comercio":1},"Emerson":{"Acesso Dedicado":38,"Acesso Link Comercio":2,"WiFi+":1},"Endrew":{"Acesso Dedicado":1363,"Acesso Link Comercio":33,"E-mail":2,"Fortinet":8,"SonicWall":1},"Ermerson":{"Acesso Dedicado":57,"Acesso Link Comercio":2,"E-mail":1},"Felipe":{"Acesso Dedicado":26,"Antispam":1,"Antivirus":36,"Backup":8,"Cloud - Serv. Virtual":5,"E-mail":55,"Fortinet":666,"Hospedagem":7,"SMTP":1,"SonicWall":38,"Suporte a servidores":2,"Trust-Mail":1,"WiFi+":24,"ZABBIX":1},"Fernanda":{"Acesso Dedicado":12,"Acesso Link Comercio":1,"Antivirus":1,"E-mail":3,"Fortinet":6,"Hospedagem":5,"WiFi+":2},"Flavio":{"Acesso Dedicado":1,"Cloud - Serv. Virtual":1,"Fortinet":1,"Hospedagem":1},"Gabriel":{"Acesso Dedicado":6,"WiFi+":1},"Guilherme Coelho":{"Acesso Dedicado":130,"Acesso Link Comercio":2},"Gustavo":{"Acesso Dedicado":736,"Acesso Link Comercio":19,"Co-Location":1,"Fortinet":3,"Hospedagem":2,"WiFi+":2},"Gustavo Avelar":{"Acesso Dedicado":99,"Acesso Link Comercio":2},"Hillara Rafaela":{"Acesso Dedicado":115,"Acesso Link Comercio":4},"Isabella":{"Acesso Dedicado":1,"Fortinet":4,"SonicWall":1,"WiFi+":2},"Janaina":{"Acesso Dedicado":33,"Analise Vulnerabilidade":3,"Antispam":1,"Antivirus":2,"Backup":6,"Cloud - Serv. Virtual":8,"E-mail":20,"Fortinet":45,"Hospedagem":8,"SMTP":1,"SonicWall":2,"WiFi+":3},"Jeferson":{"Acesso Dedicado":17,"Acesso Link Comercio":1,"Backup":8,"E-mail":5,"Hospedagem":1},"Jeison":{"Acesso Dedicado":82},"Jhennifer":{"Acesso Dedicado":237,"Acesso Link Comercio":1,"Antispam":1,"Antivirus":9,"Backup":79,"Cloud - Serv. Virtual":6,"E-mail":29,"Fortinet":261,"Hospedagem":14,"SMTP":1,"SonicWall":21,"Suporte a servidores":1,"WiFi+":4},"José":{"Acesso Dedicado":102,"Antispam":1,"Antivirus":1,"Backup":3,"Cloud - Serv. Virtual":4,"E-mail":5,"Fortinet":196,"Hospedagem":12,"SonicWall":14,"Suporte a servidores":1,"WiFi+":4},"João":{"Backup":1},"João Paulo":{"Acesso Dedicado":28,"Antivirus":37,"Backup":4,"Cloud - Serv. Virtual":2,"E-mail":19,"Fortinet":1480,"Hospedagem":15,"SMTP":1,"SonicWall":90,"Suporte a servidores":2,"WiFi+":64,"ZABBIX":1},"João Pedro":{"Acesso Dedicado":9,"Fortinet":2},"João Victor":{"Acesso Dedicado":172,"Acesso Link Comercio":3,"WiFi+":1},"Jéssica":{"E-mail":1},"Júlio":{"Acesso Dedicado":50,"Acesso Link Comercio":8,"Antivirus":1,"Backup":11,"E-mail":8,"Fortinet":11,"SonicWall":1,"WiFi+":5},"Karina":{"Acesso Dedicado":17,"Antivirus":3,"Cloud - Serv. Virtual":1,"E-mail":3,"Fortinet":4,"SonicWall":4,"Trust-Mail":1,"WiFi+":1},"Kaue":{"Fortinet":1,"WiFi+":2},"Laryssa":{"E-mail":1},"Lucas":{"Acesso Dedicado":225,"Acesso Link Comercio":3,"Analise Vulnerabilidade":2,"Antispam":2,"Antivirus":250,"Backup":5,"Cloud - Serv. Virtual":18,"E-mail":33,"Fortinet":2868,"Hospedagem":17,"SonicWall":159,"Suporte a servidores":5,"WiFi+":115,"ZABBIX":1},"Marcia":{"Acesso Dedicado":2,"Fortinet":1,"SonicWall":3},"Marcio Takeshi":{"Acesso Dedicado":22,"Antivirus":2,"Backup":3,"E-mail":3,"Fortinet":8,"Hospedagem":3,"WiFi+":2},"Marcos":{"Acesso Dedicado":596,"Acesso Link Comercio":18,"Antivirus":1,"Cloud - Serv. Virtual":1,"E-mail":2,"Fortinet":6,"Hospedagem":1,"WiFi+":1},"Matheus":{"Acesso Dedicado":58,"Antivirus":51,"Backup":26,"Cloud - Serv. Virtual":13,"E-mail":36,"Fortinet":130,"Hospedagem":41,"SMTP":1,"SonicWall":14,"Trust-Mail":4,"WiFi+":7},"Matheus Vieira":{"Antivirus":1,"Backup":3,"E-mail":5,"Fortinet":24,"SonicWall":2,"Suporte a servidores":1},"Mauro":{"Acesso Dedicado":4,"Antivirus":5},"Miriam":{"Acesso Dedicado":337,"Acesso Link Comercio":1,"Antivirus":1,"Backup":78,"Cloud - Serv. Virtual":4,"E-mail":4,"Fortinet":101,"Hospedagem":10,"SMTP":1,"SonicWall":7,"WiFi+":1},"Nicolas":{"Acesso Dedicado":10},"Pedro":{"Acesso Dedicado":3,"Antivirus":12,"Fortinet":211,"SonicWall":9,"WiFi+":1},"Pedro Gregory":{"Acesso Dedicado":9,"Acesso Link Comercio":1},"Rafael Gomes":{"Acesso Dedicado":573,"Acesso Link Comercio":13,"Hospedagem":1},"Rayane":{"Acesso Dedicado":2,"Hospedagem":1},"Reinaldo":{"Acesso Dedicado":8,"Antivirus":1,"Backup":1,"E-mail":2,"Fortinet":9,"Hospedagem":1,"WiFi+":2},"Renan":{"Acesso Dedicado":6,"Acesso Link Comercio":1},"Renato":{"Acesso Dedicado":64,"Antivirus":2,"Backup":37,"Cloud - Serv. Virtual":13,"Co-Location":8,"E-mail":9,"Fortinet":1,"Hospedagem":11,"Suporte a servidores":4},"Ricardo Cauê":{"Acesso Dedicado":72,"Co-Location":10,"Suporte a servidores":1},"Robson":{"Acesso Dedicado":3},"Rodolfo":{"Acesso Dedicado":1104,"Acesso Link Comercio":35,"Co-Location":1,"E-mail":1,"Fortinet":5,"WiFi+":1},"Stephanie":{"Acesso Dedicado":1,"Fortinet":1,"SonicWall":1},"Supernova":{},"Thiago":{"Acesso Dedicado":521,"Acesso Link Comercio":10,"Antispam":30,"Antivirus":201,"Backup":334,"Cloud - Serv. Virtual":71,"E-mail":870,"Fortinet":790,"Hospedagem":370,"SMTP":42,"SonicWall":12,"Suporte a servidores":6,"Trust-Mail":122,"WiFi+":11,"ZABBIX":3},"Tiago":{"Acesso Dedicado":65,"Acesso Link Comercio":1,"Analise Vulnerabilidade":1,"Antispam":15,"Antivirus":78,"Backup":57,"Cloud - Serv. Virtual":53,"E-mail":421,"Fortinet":1383,"Hospedagem":122,"SMTP":17,"SonicWall":66,"Suporte a servidores":11,"Trust-Mail":53,"WiFi+":47},"Victor":{"Acesso Dedicado":138,"Acesso Link Comercio":10,"Fortinet":1},"Vinicius":{"Acesso Dedicado":31,"Acesso Link Comercio":2,"Antivirus":7,"Backup":1,"Cloud - Serv. Virtual":4,"Fortinet":140,"SonicWall":6,"WiFi+":4},"Vitor":{"Acesso Dedicado":302,"Acesso Link Comercio":12,"Analise Vulnerabilidade":1,"Antispam":6,"Antivirus":15,"Backup":50,"Cloud - Serv. Virtual":8,"E-mail":112,"Fortinet":1039,"Hospedagem":106,"SMTP":6,"SonicWall":45,"Suporte a servidores":2,"Trust-Mail":25,"WiFi+":18},"Wenderson Do Nascimento":{"Acesso Dedicado":10},"Wesley":{"Acesso Dedicado":24,"Acesso Link Comercio":1,"WiFi+":1},"Wilhard":{"Acesso Dedicado":933,"Acesso Link Comercio":21,"Antispam":1,"Backup":1,"Co-Location":2,"E-mail":3,"Fortinet":7,"SonicWall":1},"Yuri":{"Acesso Dedicado":218,"Acesso Link Comercio":1,"Analise Vulnerabilidade":1,"Antispam":4,"Antivirus":12,"Backup":86,"Cloud - Serv. Virtual":8,"E-mail":40,"Fortinet":497,"Hospedagem":45,"SonicWall":15,"Trust-Mail":1,"WiFi+":18,"ZABBIX":1},"imcnet":{"Acesso Dedicado":17,"Antivirus":1,"Backup":1,"Cloud - Serv. Virtual":2,"Fortinet":4,"Hospedagem":3,"SonicWall":1,"Trust-Mail":1}};
+const XP_THR=200, CP_MAX=5;
+
+// XP por classificação: {xpBase, multiplicadorProblema}
+const XP_CLASS={
+  'A':{base:8, multProblema:2.0},
+  'B':{base:5, multProblema:1.5},
+  'C':{base:3, multProblema:1.0},
+  'D':{base:1, multProblema:1.0},
+  'E':{base:1, multProblema:1.0}
+};
+
+// Fortinet: 5 níveis por tempo de resolução
+const FORTINET_LEVELS={
+  'A':{label:'Nível A — Crítico',time:'Até 1 semana',color:'fl-a',desc:'Complexidade máxima / projetos'},
+  'B':{label:'Nível B — Alto',time:'Até 1 dia',color:'fl-b',desc:'Alta complexidade'},
+  'C':{label:'Nível C — Médio',time:'Até 3 horas',color:'fl-c',desc:'Complexidade média'},
+  'D':{label:'Nível D — Baixo',time:'Até 1 hora',color:'fl-d',desc:'Baixa complexidade'},
+  'E':{label:'Nível E — Urgente',time:'Até 10 min',color:'fl-e',desc:'Atendimento imediato'}
+};
+
+let xpData={}, presentes=new Set(), escala={}, filterS=null, allSel=false, rstTarget=null, curUser=null;
+function canEdit(){return curUser&&(curUser.role==='admin'||curUser.role==='supervisor');}
+let USERS=[
+  {name:'Reinaldo',email:'reinaldo@cti.com',pass:'Cti@2026',role:'admin',active:true},
+  {name:'Supervisor',email:'supervisor@cti.com',pass:'Cti@2026',role:'supervisor',active:true},
+  {name:'Colaborador',email:'colaborador@cti.com',pass:'Cti@2026',role:'colaborador',active:true}
+];
+let naoAlocados=[];
+let moveTarget=null, moveContext='ops';
+let fq='', fStatus='all', fServ='';
+
+// Sort state
+let sortField='nome', sortDir=1;
+
+function setSort(field){
+  if(sortField===field){sortDir*=-1;}else{sortField=field;sortDir=1;}
+  ['nome','xp','serv'].forEach(f=>{
+    const btn=document.getElementById('sort-'+f);
+    const arr=document.getElementById('sa-'+f);
+    if(btn){btn.classList.toggle('active',f===field);}
+    if(arr){arr.textContent=f===field?(sortDir===1?'↑':'↓'):'↕';}
+  });
+  renderTable();
+}
+
+// ─── ESCALAS SALVAS ─────────────────────────────────────────
+// { id, date(key "YYYY-MM-DD"), presentes[], escala{}, naoAlocados[], status:"aberta"|"fechada", chamadas:[], xpCreditado:{} }
+let escalasDB=[];
+let importChamadas=[]; // chamadas parseadas do xlsx import
+let importEscalaId=null; // id da escala sendo importada
+let escalasFilter='abertas';
+
+// ─── CALENDAR STATE ─────────────────────────────────────────
+let calYear=2026, calMonth=0;
+let calSelectedDate=null;
+let calEscalas={};
+let calTempPresentes=new Set(), calTempDate=null;
+let calFilterS=null;
+const MESES=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+
+// ─── AUTH ────────────────────────────────────────────────────
+function doLogin(){
+  const e=document.getElementById('le').value.trim().toLowerCase();
+  const p=document.getElementById('lp').value;
+  const u=USERS.find(x=>x.email.toLowerCase()===e&&x.pass===p&&x.active);
+  const err=document.getElementById('lerr');
+  if(!u){err.classList.add('show');return;}
+  err.classList.remove('show');
+  curUser=u;
+  document.getElementById('ls').style.display='none';
+  const app=document.getElementById('app');
+  app.style.display='flex';
+  document.getElementById('nav-nm').textContent=u.name;
+  document.getElementById('nav-av').textContent=initials(u.name);
+  const isAdmin=u.role==='admin';
+  const isSupervisor=u.role==='supervisor';
+  const isColab=u.role==='colaborador';
+  // Tab visibility
+  document.getElementById('nt-us').style.display=isAdmin?'':'none';
+  document.getElementById('nt-op').style.display=isColab?'none':'';
+  document.getElementById('nt-escalas').style.display=isColab?'none':'';
+  document.getElementById('nt-doc').style.display=isColab?'none':'';
+  // Admin controls
+  document.getElementById('th-act').textContent=isAdmin?'Ação':'';
+  document.getElementById('btn-add-colab').style.display=isAdmin?'':'none';
+  // If colaborador, go straight to calendar
+  if(isColab){
+    switchTab('cal');
+  } else {
+    switchTab('op');
+  }
+  const now=new Date();
+  calYear=Math.max(2026,now.getFullYear());
+  calMonth=calYear===2026?Math.max(0,now.getMonth()):now.getMonth();
+  initXP(); renderTable(); updStats(); buildFunnel();
+  renderCal();
+}
+function doLogout(){
+  curUser=null; presentes.clear(); escala={}; naoAlocados=[];
+  document.getElementById('app').style.display='none';
+  document.getElementById('ls').style.display='flex';
+  document.getElementById('le').value=''; document.getElementById('lp').value='';
+}
+
+// ─── DRAWER ──────────────────────────────────────────────────
+let drawerOpen=true;
+function toggleDrawer(){drawerOpen=!drawerOpen;document.getElementById('drawer').classList.toggle('closed',!drawerOpen);}
+
+// ─── TABS ────────────────────────────────────────────────────
+let curTab='op';
+function switchTab(t){
+  curTab=t;
+  document.querySelectorAll('.tab-pane').forEach(x=>{x.classList.remove('active');x.style.display='';});
+  document.querySelectorAll('.nt').forEach(x=>x.classList.remove('active'));
+  const tp=document.getElementById('tab-'+t);
+  tp.classList.add('active');
+  if(t==='cal'){tp.style.display='flex';document.getElementById('main-content').style.padding='0';document.getElementById('main-content').style.overflow='hidden';renderCal();}
+  else{document.getElementById('main-content').style.padding='24px';document.getElementById('main-content').style.overflow='auto';}
+  document.getElementById('nt-'+t).classList.add('active');
+  document.getElementById('drawer-steps').style.display=t==='op'?'':'none';
+  if(t==='escalas') renderEscalasList();
+  if(t==='us') renderUsers();
+  buildFunnel();
+}
+
+// ─── FUNIL ───────────────────────────────────────────────────
+function buildFunnel(){
+  const fc=document.getElementById('funnel-content');
+  if(curTab==='op'){
+    const cur=document.querySelector('#tab-op .screen.active')?.id;
+    if(cur==='sc-0'){
+      fc.innerHTML=`<div class="filt-group"><span class="filt-label">Buscar técnico</span>
+          <input class="filt-input" placeholder="Nome..." value="${fq}" oninput="fq=this.value;renderTable()">
+        </div>
+        <div class="filt-group"><span class="filt-label">Status</span>
+          <div class="filt-chips">
+            <button class="chip chip-sm${fStatus==='all'?' on':''}" onclick="fStatus='all';renderTable();buildFunnel()">Todos</button>
+            <button class="chip chip-sm${fStatus==='esp'?' on':''}" onclick="fStatus='esp';renderTable();buildFunnel()">Especialista</button>
+            <button class="chip chip-sm${fStatus==='gen'?' on':''}" onclick="fStatus='gen';renderTable();buildFunnel()">Geral</button>
+          </div>
+        </div>
+        <div class="filt-group"><span class="filt-label">Serviço</span>
+          <select class="filt-input" onchange="fServ=this.value;renderTable()">
+            <option value="">Todos os serviços</option>
+            ${SERVICOS.map(s=>`<option value="${s}"${fServ===s?' selected':''}>  ${s}</option>`).join('')}
+          </select>
+        </div>`;
+    } else if(cur==='sc-2'){
+      const ativos=SERVICOS.filter(s=>escala[s]&&(escala[s].piloto||escala[s].copilotos.length));
+      fc.innerHTML=`<div class="filt-group"><span class="filt-label">Filtrar setor</span>
+          <div class="filt-chips">
+            <button class="chip chip-sm${!filterS?' on':''}" onclick="filterGrid(null)">Todos</button>
+            ${ativos.map(s=>`<button class="chip chip-sm${filterS===s?' on':''}" onclick="filterGrid('${s}')">${s}</button>`).join('')}
+          </div>
+        </div>
+        ${naoAlocados.length?`<div class="filt-group" style="margin-top:8px"><span class="filt-label" style="color:var(--rd)">⚠ Sem vaga (${naoAlocados.length})</span><div style="font-size:11px;color:var(--mu);line-height:1.5">${naoAlocados.join(', ')}</div></div>`:''}`;
+    } else {
+      fc.innerHTML='<div style="font-size:12px;color:var(--mu);padding:4px">Selecione quem está presente.</div>';
+    }
+  } else if(curTab==='escalas'){
+    const ab=escalasDB.filter(e=>e.status==='aberta').length;
+    const fc2=escalasDB.filter(e=>e.status==='fechada').length;
+    fc.innerHTML=`<div style="font-size:12px;color:var(--mu);padding:4px">
+      <div style="margin-bottom:10px"><strong style="color:var(--am)">${ab}</strong> escala(s) abertas aguardando XP</div>
+      <div><strong style="color:var(--gr)">${fc2}</strong> escala(s) fechadas</div>
+    </div>`;
+  } else {
+    fc.innerHTML='<div style="font-size:12px;color:var(--mu);padding:4px">Use as abas para navegar.</div>';
+  }
+}
+
+// ─── XP ──────────────────────────────────────────────────────
+function initXP(){COLABS.forEach(c=>{xpData[c]={};SERVICOS.forEach(s=>{xpData[c][s]=(XP_SEED[c]&&XP_SEED[c][s])||0;});}); }
+function initials(n){return n.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase().slice(0,2);}
+function getEsp(c){return SERVICOS.filter(s=>xpData[c]&&xpData[c][s]>=XP_THR);}
+function totXP(c){return Object.values(xpData[c]||{}).reduce((a,b)=>a+b,0);}
+function updStats(){
+  const esp=COLABS.filter(c=>getEsp(c).length>0).length;
+  document.getElementById('st-tot').textContent=COLABS.length;
+  document.getElementById('st-esp').textContent=esp;
+  updLastEscala();
+}
+function updLastEscala(){
+  const el=document.getElementById('st-last-presentes');
+  if(!el)return;
+  if(!escalasDB.length){el.innerHTML='<span style="font-size:11px;color:var(--mu);font-style:italic">Nenhuma escala salva ainda.</span>';return;}
+  const last=escalasDB[escalasDB.length-1];
+  const pilotos=new Set(Object.values(last.escala).map(s=>s.piloto).filter(Boolean));
+  const list=last.presentes.slice().sort((a,b)=>{
+    const ap=pilotos.has(a)?0:1;const bp=pilotos.has(b)?0:1;
+    return ap-bp||a.localeCompare(b);
+  });
+  el.innerHTML=list.map(c=>{
+    const isPiloto=pilotos.has(c);
+    return `<div class="last-pres-item">
+      <div class="last-pres-av" style="${isPiloto?'background:var(--am-l);color:var(--am)':''}">${initials(c)}</div>
+      <span class="last-pres-name">${c}</span>
+      ${isPiloto?'<span class="last-pres-role">Piloto</span>':''}
+    </div>`;
+  }).join('');
+}
+
+// ─── GESTÃO TABLE ────────────────────────────────────────────
+function renderTable(){
+  let list=COLABS.filter(c=>{
+    const matchQ=c.toLowerCase().includes(fq.toLowerCase());
+    const esps=getEsp(c);
+    const matchSt=fStatus==='all'||(fStatus==='esp'&&esps.length>0)||(fStatus==='gen'&&esps.length===0);
+    const matchSv=!fServ||(xpData[c]&&xpData[c][fServ]>0);
+    return matchQ&&matchSt&&matchSv;
+  });
+  // Sort
+  list=list.slice().sort((a,b)=>{
+    if(sortField==='xp'){return sortDir*(totXP(b)-totXP(a));}
+    if(sortField==='serv'){return sortDir*(getEsp(b).length-getEsp(a).length);}
+    return sortDir*a.localeCompare(b,'pt-BR');
+  });
+  const maxXP=Math.max(1,...COLABS.map(x=>totXP(x)));
+  const isAdmin=curUser&&curUser.role==='admin';
+  document.getElementById('tb').innerHTML=list.map(c=>{
+    const esps=getEsp(c); const txp=Math.round(totXP(c)); const pct=Math.min(100,Math.round(txp/maxXP*100));
+    const espH=esps.length?esps.slice(0,3).map(s=>`<span class="badge be">${s}</span>`).join('')+(esps.length>3?`<span class="badge bu">+${esps.length-3}</span>`:''): '<span style="color:var(--mu);font-size:11px">—</span>';
+    const act=isAdmin?`<button class="btn btn-sm bd" onclick="openReset('${escQ(c)}')">Reset XP</button>`:'';
+    return `<tr><td><div style="display:flex;align-items:center;gap:8px"><div class="cav" style="width:26px;height:26px;font-size:9px">${initials(c)}</div><span style="font-weight:500">${c}</span></div></td><td><div style="display:flex;gap:4px;flex-wrap:wrap">${espH}</div></td><td><div class="xbw"><div class="xb"><div class="xf${pct>=80?' mx':''}" style="width:${pct}%"></div></div><span style="font-size:11px;color:var(--mu);min-width:28px">${txp}</span></div></td><td><span class="badge ${esps.length?'be':'bg'}">${esps.length?'Especialista':'Geral'}</span></td><td>${act}</td></tr>`;
+  }).join('');
+  updStats();
+}
+
+// ─── CHAMADA ────────────────────────────────────────────────
+let chamadaSortField='nome', chamadaSortDir=1;
+function setChamadaSort(field){
+  if(chamadaSortField===field){chamadaSortDir*=-1;}else{chamadaSortField=field;chamadaSortDir=1;}
+  ['nome','xp','serv'].forEach(f=>{
+    const btn=document.getElementById('csort-'+f);
+    const arr=document.getElementById('csa-'+f);
+    if(btn)btn.classList.toggle('active',f===field);
+    if(arr)arr.textContent=f===field?(chamadaSortDir===1?'↑':'↓'):'↕';
+  });
+  renderChamada();
+}
+function renderChamada(){
+  const sq=(document.getElementById('chamada-search')?.value||'').toLowerCase();
+  let list=COLABS.filter(c=>!sq||c.toLowerCase().includes(sq)).slice().sort((a,b)=>{
+    if(chamadaSortField==='xp')return chamadaSortDir*(totXP(b)-totXP(a));
+    if(chamadaSortField==='serv')return chamadaSortDir*(getEsp(b).length-getEsp(a).length);
+    return chamadaSortDir*a.localeCompare(b,'pt-BR');
+  });
+  document.getElementById('cg').innerHTML=list.map(c=>{
+    const esps=getEsp(c); const sel=presentes.has(c);
+    const txp=Math.round(totXP(c));
+    return `<div class="cc${sel?' sel':''}" onclick="toggleP('${escQ(c)}')"><div class="cav">${initials(c)}</div><div><div style="font-size:12px;font-weight:500">${c}</div><div style="font-size:10px;color:var(--mu)">${esps.length?esps.slice(0,2).join(', ')+(esps.length>2?'…':''):'Equipe geral'} · ${txp} XP</div></div><span class="cch">✓</span></div>`;
+  }).join('');
+  document.getElementById('pc').textContent=`${presentes.size} selecionados`;
+  document.getElementById('btn-gerar').disabled=presentes.size===0;
+}
+function toggleP(n){if(presentes.has(n))presentes.delete(n);else presentes.add(n);renderChamada();}
+function toggleAll(){if(allSel){presentes.clear();allSel=false;}else{COLABS.forEach(c=>presentes.add(c));allSel=true;}renderChamada();}
+
+// ─── ALGORITMO DE ESCALA ────────────────────────────────────
+function buildEscala(lista){
+  const esp200=new Set(COLABS.filter(c=>getEsp(c).length>0));
+  const esc={};SERVICOS.forEach(s=>{esc[s]={piloto:null,copilotos:[]};});
+  const alocados=new Set();const naoAloc=[];
+  const escN={};
+  SERVICOS.forEach(s=>{escN[s]=lista.filter(c=>esp200.has(c)&&(xpData[c][s]||0)>=XP_THR).length||999;});
+  [...SERVICOS].sort((a,b)=>escN[a]-escN[b]).forEach(s=>{
+    const cands=lista.filter(c=>esp200.has(c)&&(xpData[c][s]||0)>=XP_THR&&!alocados.has(c))
+      .sort((a,b)=>(xpData[b][s]||0)-(xpData[a][s]||0));
+    if(cands.length){esc[s].piloto=cands[0];alocados.add(cands[0]);}
+  });
+  lista.filter(c=>!alocados.has(c)).forEach(c=>{
+    const viavel=SERVICOS.filter(s=>esc[s].piloto&&esc[s].copilotos.length<CP_MAX).sort((a,b)=>esc[a].copilotos.length-esc[b].copilotos.length);
+    if(viavel.length){esc[viavel[0]].copilotos.push(c);}
+    else{const sp=SERVICOS.filter(s=>!esc[s].piloto&&esc[s].copilotos.length<CP_MAX).sort((a,b)=>esc[a].copilotos.length-esc[b].copilotos.length);if(sp.length)esc[sp[0]].copilotos.push(c);else naoAloc.push(c);}
+  });
+  return{escala:esc,naoAlocados:naoAloc};
+}
+
+// ─── GERAR ESCALA (OPS) ─────────────────────────────────────
+function gerarEscala(){
+  const lista=[...presentes];
+  const result=buildEscala(lista);
+  escala=result.escala; naoAlocados=result.naoAlocados;
+  renderGrid(); goTo(2);
+  if(naoAlocados.length) setTimeout(()=>toast(`⚠ ${naoAlocados.length} técnico(s) sem vaga — realoque manualmente.`,'r'),300);
+}
+
+// ─── SALVAR ESCALA → ABRE DATE PICKER ───────────────────────
+let dpkYear=2026, dpkMonth=0, dpkPickedDate=null;
+const MESES_ABBR=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+function salvarEscalaAtual(){
+  const now=new Date();
+  dpkYear=now.getFullYear(); dpkMonth=now.getMonth(); dpkPickedDate=null;
+  renderDpk();
+  document.getElementById('dpk-selected-lbl').classList.remove('show');
+  document.getElementById('dpk-confirm').disabled=true;
+  openMd('datepicker');
+}
+function dpkPrev(){dpkMonth--;if(dpkMonth<0){dpkMonth=11;dpkYear--;}renderDpk();}
+function dpkNext(){dpkMonth++;if(dpkMonth>11){dpkMonth=0;dpkYear++;}renderDpk();}
+function renderDpk(){
+  document.getElementById('dpk-title').textContent=`${MESES[dpkMonth]} ${dpkYear}`;
+  const grid=document.getElementById('dpk-grid');
+  const days=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  let html=days.map(d=>`<div class="dpk-dow">${d}</div>`).join('');
+  const first=new Date(dpkYear,dpkMonth,1);
+  const startDow=first.getDay();
+  const daysInMonth=new Date(dpkYear,dpkMonth+1,0).getDate();
+  const prevDays=new Date(dpkYear,dpkMonth,0).getDate();
+  const tk=todayKey();
+  for(let i=startDow-1;i>=0;i--){html+=`<div class="dpk-cell other">${prevDays-i}</div>`;}
+  for(let d=1;d<=daysInMonth;d++){
+    const key=dateKey(dpkYear,dpkMonth,d);
+    const isToday=key===tk;
+    const hasSaved=escalasDB.some(e=>e.date===key);
+    const isPicked=key===dpkPickedDate;
+    html+=`<div class="dpk-cell${isToday?' today':''}${hasSaved?' has-esc':''}${isPicked?' picked':''}" onclick="dpkPick('${key}')">${d}</div>`;
+  }
+  const total=startDow+daysInMonth;
+  const rem=total%7===0?0:7-total%7;
+  for(let d=1;d<=rem;d++){html+=`<div class="dpk-cell other">${d}</div>`;}
+  grid.innerHTML=html;
+}
+function dpkPick(key){
+  dpkPickedDate=key;
+  renderDpk();
+  const lbl=document.getElementById('dpk-selected-lbl');
+  lbl.textContent=`📅 Data selecionada: ${fmtDateLong(key)}`;
+  lbl.classList.add('show');
+  document.getElementById('dpk-confirm').disabled=false;
+}
+function confirmarDataEscala(){
+  if(!dpkPickedDate){toast('Selecione uma data.','r');return;}
+  closeMd('datepicker');
+  const id='esc_'+(Date.now());
+  const novaEscala={
+    id, date:dpkPickedDate,
+    presentes:[...presentes],
+    escala:JSON.parse(JSON.stringify(escala)),
+    naoAlocados:[...naoAlocados],
+    status:'aberta',
+    chamadas:[], xpCreditado:{}, criadaEm:new Date().toISOString()
+  };
+  escalasDB.push(novaEscala);
+  // sync to calendar
+  calEscalas[dpkPickedDate]={presentes:[...presentes],escala:JSON.parse(JSON.stringify(escala)),naoAlocados:[...naoAlocados]};
+  toast(`Escala de ${fmtDate(dpkPickedDate)} salva! Acesse a aba Escalas para importar chamadas e creditar XP.`,'g');
+  escala={}; presentes.clear(); allSel=false; naoAlocados=[];
+  renderTable(); updStats();
+  setTimeout(()=>goTo(0),1200);
+}
+
+// ─── RENDER GRID (OPS) ──────────────────────────────────────
+function renderGrid(){
+  const fc=document.getElementById('ftags');
+  const ativos=SERVICOS.filter(s=>escala[s]&&(escala[s].piloto||escala[s].copilotos.length));
+  fc.innerHTML=`<button class="tag${!filterS?' active':''}" onclick="filterGrid(null)">Todos</button>`+
+    ativos.map(s=>`<button class="tag${filterS===s?' active':''}" onclick="filterGrid('${s}')">${s}</button>`).join('');
+  const oz=document.getElementById('overflow-zone');
+  if(naoAlocados.length){
+    oz.innerHTML=`<div class="overflow-alert"><div class="oa-icon">⚠️</div><div class="oa-body">
+      <div class="oa-title">Superlotação — ${naoAlocados.length} técnico(s) sem vaga</div>
+      <div class="oa-desc">Mova manualmente abaixo.</div>
+      <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">${naoAlocados.map(n=>`<span class="unalloc-pill"><div class="ra g" style="width:20px;height:20px;font-size:8px;flex-shrink:0">${initials(n)}</div>${n}<button class="cp-move-btn" style="margin-left:4px" onclick="openMoveFromOverflow('${escQ(n)}','ops')">↔ Alocar</button></span>`).join('')}</div>
+    </div></div>`;
+  } else {oz.innerHTML='';}
+  const el=document.getElementById('eg'); el.innerHTML='';
+  (filterS?[filterS]:SERVICOS).forEach(s=>{
+    const{piloto,copilotos}=escala[s]||{piloto:null,copilotos:[]};
+    if(!piloto&&!copilotos.length) return;
+    const xpP=piloto?Math.round(xpData[piloto][s]||0):0;
+    const pH=piloto?`<div class="rp"><div class="ra">${initials(piloto)}</div><div><div class="rn">${piloto}</div><div class="rx">${xpP} XP</div></div></div>`:`<span class="np">Sessão coletiva</span>`;
+    const cpH=copilotos.length?`<div class="cp-list">${copilotos.map(cp=>`<div class="cp-item" draggable="true" data-name="${escQ(cp)}" data-from="${escQ(s)}" ondragstart="onDragStart(event,'ops')" ondragend="onDragEnd(event)"><span class="drag-handle">⠿</span><div class="ra g">${initials(cp)}</div><span class="rn" style="flex:1">${cp}</span><button class="cp-move-btn" onclick="openMove('${escQ(cp)}','${escQ(s)}','ops')">↔</button></div>`).join('')}</div>`:`<span class="np">Sem co-piloto</span>`;
+    const card=document.createElement('div');
+    card.className='esc'; card.dataset.servico=s;
+    // Build SLA levels for ALL services (shown in expandable panel — hidden by default)
+    const levelOrder2=['E','D','C','B','A'];
+    const levelAssign2={A:[],B:[],C:[],D:[],E:[]};
+    copilotos.forEach((cp,i)=>{const lv=levelOrder2[i%levelOrder2.length];levelAssign2[lv].push(cp);});
+    const allFortiHtml=`<div class="fortinet-levels">
+      <div class="fortinet-levels-title">🔒 Níveis de atendimento SLA</div>
+      ${Object.entries(FORTINET_LEVELS).map(([lv,cfg])=>{
+        const pills=(levelAssign2[lv]||[]).map(cp=>`<span class="fl-copiloto-pill"><div class="ra g" style="width:16px;height:16px;font-size:7px;flex-shrink:0">${initials(cp)}</div>${cp}</span>`).join('');
+        return `<div class="fortinet-level-row">
+          <div class="fl-badge ${cfg.color}">${lv}</div>
+          <div class="fl-info">
+            <div class="fl-label">${cfg.label}</div>
+            <div class="fl-time">⏱ ${cfg.time} · ${cfg.desc}</div>
+            ${pills?`<div class="fl-copilotos">${pills}</div>`:''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+    const panelId='fp-'+s.replace(/[^a-z0-9]/gi,'_');
+    card.innerHTML=`<div class="esc-name">${s}<span style="display:flex;align-items:center;gap:4px"><span style="font-size:9px;color:var(--mu)">${copilotos.length}/${CP_MAX}</span><button class="forti-toggle" title="Ver classificação SLA" onclick="toggleFortiPanel('${panelId}',this)">▸ SLA</button></span></div><div class="rr"><span class="rl">Piloto</span>${pH}</div><div class="rr"><span class="rl">Co-pilotos</span>${cpH}</div><div class="forti-extra-panel" id="${panelId}" style="display:none">${allFortiHtml}</div>`;
+    card.addEventListener('dragover',e=>{e.preventDefault();e.currentTarget.classList.add('drop-over');});
+    card.addEventListener('dragleave',e=>e.currentTarget.classList.remove('drop-over'));
+    card.addEventListener('drop',e=>{e.preventDefault();e.currentTarget.classList.remove('drop-over');if(!dragData)return;const d=e.currentTarget.dataset.servico;if(d&&d!==dragData.from)doMove(dragData.nome,dragData.from,d,'ops');});
+    el.appendChild(card);
+  });
+  buildFunnel();
+}
+function filterGrid(s){filterS=s;renderGrid();}
+let dragData=null;
+function onDragStart(e,ctx){const el=e.currentTarget;dragData={nome:el.dataset.name,from:el.dataset.from,ctx};el.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+function onDragEnd(e){e.currentTarget.classList.remove('dragging');dragData=null;}
+function doMove(nome,fromS,toS,ctx){
+  const esc=ctx==='ops'?escala:calEscalas[calSelectedDate]?.escala;
+  const naList=ctx==='ops'?naoAlocados:calEscalas[calSelectedDate]?.naoAlocados;
+  if(!esc)return;
+  if(fromS&&fromS!=='__overflow__'){const idx=esc[fromS]?.copilotos.indexOf(nome);if(idx!==-1)esc[fromS].copilotos.splice(idx,1);}else{const idx=naList.indexOf(nome);if(idx!==-1)naList.splice(idx,1);}
+  if(toS==='__overflow__'){naList.push(nome);toast(`${nome} movido para superlotação.`);}
+  else{if(!esc[toS])esc[toS]={piloto:null,copilotos:[]};if(esc[toS].copilotos.length>=CP_MAX){toast(`⚠ ${toS} já tem ${CP_MAX} co-pilotos.`,'r');if(fromS&&fromS!=='__overflow__')esc[fromS].copilotos.push(nome);else naList.push(nome);return;}esc[toS].copilotos.push(nome);toast(`${nome} → ${toS}.`,'g');}
+  if(ctx==='ops')renderGrid();else renderCalDetail();
+}
+function toggleFortiPanel(id,btn){
+  const panel=document.getElementById(id);
+  if(!panel)return;
+  const open=panel.style.display==='none'||panel.style.display==='';
+  panel.style.display=open?'block':'none';
+  btn.textContent=open?'▾ SLA':'▸ SLA';
+}
+function openMove(nome,fromS,ctx){
+  moveTarget={nome,fromS}; moveContext=ctx;
+  const esc=ctx==='ops'?escala:calEscalas[calSelectedDate]?.escala||{};
+  document.getElementById('move-title').textContent=`Mover: ${nome}`;
+  document.getElementById('move-sub').textContent=`Setor atual: ${fromS}. Escolha o destino:`;
+  const sel=document.getElementById('move-dest');
+  sel.innerHTML=SERVICOS.filter(s=>s!==fromS&&esc[s]).map(s=>{const av=CP_MAX-((esc[s]&&esc[s].copilotos.length)||0);return`<option value="${s}" ${av<=0?'disabled':''}>${s} (${av>0?av+' vaga(s)':'CHEIO'})</option>`;}).join('')+`<option value="__overflow__">⚠ Mover para superlotação</option>`;
+  openMd('move');
+}
+function openMoveFromOverflow(nome,ctx){
+  moveTarget={nome,fromS:'__overflow__'}; moveContext=ctx;
+  const esc=ctx==='ops'?escala:calEscalas[calSelectedDate]?.escala||{};
+  document.getElementById('move-title').textContent=`Alocar: ${nome}`;
+  document.getElementById('move-sub').textContent='Escolha o setor de destino:';
+  const sel=document.getElementById('move-dest');
+  sel.innerHTML=SERVICOS.filter(s=>esc[s]).map(s=>{const av=CP_MAX-((esc[s]&&esc[s].copilotos.length)||0);return`<option value="${s}" ${av<=0?'disabled':''}>${s} (${av>0?av+' vaga(s)':'CHEIO'})</option>`;}).join('');
+  openMd('move');
+}
+function confirmMove(){if(!moveTarget)return;const dest=document.getElementById('move-dest').value;closeMd('move');doMove(moveTarget.nome,moveTarget.fromS,dest,moveContext);moveTarget=null;}
+
+// ─── STEPS NAV ──────────────────────────────────────────────
+let curStep=0;
+function goTo(n){
+  document.querySelectorAll('#tab-op .screen').forEach((s,i)=>s.classList.toggle('active',i===n));
+  [0,1,2].forEach(i=>{const si=document.getElementById('si-'+i);const sn=document.getElementById('sn-'+i);si.classList.remove('active','done','disabled');if(i<n)si.classList.add('done');else if(i===n)si.classList.add('active');else si.classList.add('disabled');});
+  curStep=n;
+  if(n===1)renderChamada();
+  buildFunnel();
+}
+
+// ─── USERS ───────────────────────────────────────────────────
+function renderUsers(){
+  const roleLbl={admin:'Admin',supervisor:'Supervisor',colaborador:'Colaborador'};
+  const roleBadge={admin:'bad',supervisor:'bpu-badge',colaborador:'bu'};
+  document.getElementById('utb').innerHTML=USERS.map((u,i)=>`<tr>
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="nav-av" style="width:26px;height:26px;font-size:9px">${initials(u.name)}</div><span style="font-weight:500">${u.name}</span>${u.email===curUser.email?'<span class="badge bg" style="font-size:9px">você</span>':''}</div></td>
+    <td style="color:var(--mu)">${u.email}</td>
+    <td><span class="badge ${roleBadge[u.role]||'bu'}">${roleLbl[u.role]||u.role}</span></td>
+    <td><span class="badge" style="${u.active?'background:var(--gr-l);color:var(--gr)':'background:var(--rd-l);color:var(--rd)'}">${u.active?'Ativo':'Inativo'}</span></td>
+    <td>${u.email!==curUser.email?`<button class="btn btn-sm ${u.active?'bd':''}" onclick="toggleUA(${i})">${u.active?'Desativar':'Reativar'}</button>`:''}</td>
+  </tr>`).join('');
+}
+function toggleUA(i){if(USERS[i].email===curUser.email){toast('Não pode desativar seu próprio acesso.','r');return;}USERS[i].active=!USERS[i].active;renderUsers();}
+function addUser(){
+  const n=document.getElementById('un').value.trim(),e=document.getElementById('ue').value.trim().toLowerCase(),p=document.getElementById('up').value,r=document.getElementById('ur').value;
+  if(!n||!e||!p){toast('Preencha todos os campos.');return;}
+  if(USERS.find(u=>u.email.toLowerCase()===e)){toast('E-mail já cadastrado.');return;}
+  USERS.push({name:n,email:e,pass:p,role:r,active:true});
+  closeMd('user');['un','ue','up'].forEach(id=>document.getElementById(id).value='');
+  renderUsers(); toast(`Acesso criado para ${n}!`,'g');
+}
+
+// ─── MODALS ──────────────────────────────────────────────────
+function openMd(t){
+  document.getElementById('md-'+t).classList.add('open');
+  if(t==='user')setTimeout(()=>renderUsers(),50);
+  if(t==='sla-global')renderSlaGlobal();
+}
+function renderSlaGlobal(){
+  const body=document.getElementById('sla-global-body');
+  if(!body)return;
+  const ativos=SERVICOS.filter(s=>escala[s]&&(escala[s].piloto||escala[s].copilotos.length));
+  if(!ativos.length){body.innerHTML='<div style="text-align:center;padding:30px;color:var(--mu);font-size:12px">Nenhum setor ativo na escala atual. Gere uma escala primeiro.</div>';return;}
+  const levelOrder=['E','D','C','B','A'];
+  body.innerHTML=ativos.map(s=>{
+    const{piloto,copilotos}=escala[s]||{piloto:null,copilotos:[]};
+    const levelAssign={A:[],B:[],C:[],D:[],E:[]};
+    copilotos.forEach((cp,i)=>{const lv=levelOrder[i%levelOrder.length];levelAssign[lv].push(cp);});
+    const levelsHtml=Object.entries(FORTINET_LEVELS).map(([lv,cfg])=>{
+      const members=levelAssign[lv]||[];
+      return `<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:5px">
+        <div class="fl-badge ${cfg.color}" style="flex-shrink:0">${lv}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:10px;font-weight:600;color:var(--tx)">${cfg.time}</div>
+          ${members.length?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:3px">${members.map(cp=>`<span class="fl-copiloto-pill" style="font-size:9px"><div class="ra g" style="width:14px;height:14px;font-size:6px;flex-shrink:0">${initials(cp)}</div>${cp}</span>`).join('')}</div>`:`<div style="font-size:10px;color:var(--mu);font-style:italic">—</div>`}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="forti-modal-card">
+      <div class="forti-modal-card-title">${s}</div>
+      ${piloto?`<div style="display:flex;align-items:center;gap:5px;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--b)"><div class="ra" style="width:16px;height:16px;font-size:7px;flex-shrink:0">${initials(piloto)}</div><span style="font-size:10px;font-weight:600">Piloto: ${piloto}</span></div>`:'<div style="font-size:10px;color:var(--mu);margin-bottom:6px;font-style:italic">Sessão coletiva</div>'}
+      ${levelsHtml}
+    </div>`;
+  }).join('');
+}
+function closeMd(t){document.getElementById('md-'+t).classList.remove('open');}
+function addColab(){
+  const n=document.getElementById('mn').value.trim();
+  if(!n){toast('Nome inválido.');return;}
+  if(COLABS.includes(n)){toast('Já cadastrado.');return;}
+  COLABS.push(n); xpData[n]={};SERVICOS.forEach(s=>xpData[n][s]=0);
+  closeMd('add'); document.getElementById('mn').value=''; renderTable(); toast(`${n} cadastrado!`,'g');
+}
+function openReset(name){
+  if(!curUser||curUser.role!=='admin'){toast('Sem permissão.','r');return;}
+  rstTarget=name;
+  document.getElementById('rs-sub').textContent=`Zerar XP de ${name} em qual serviço?`;
+  document.getElementById('rs-serv').innerHTML=SERVICOS.map(s=>`<option value="${s}">${s} (${Math.round(xpData[name]?.[s]||0)} XP)</option>`).join('');
+  openMd('reset');
+}
+function confirmReset(){if(rstTarget&&xpData[rstTarget])xpData[rstTarget][document.getElementById('rs-serv').value]=0;closeMd('reset');renderTable();toast('XP resetado.');}
+function escQ(s){return String(s).replace(/'/g,"\\'");}
+function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(type==='g'?' tg':type==='r'?' tr':'');setTimeout(()=>t.className='toast',3500);}
+
+// ─── ESCALAS TAB ─────────────────────────────────────────────
+function setEscalasFilter(f){
+  escalasFilter=f;
+  ['abertas','fechadas','todas'].forEach(x=>{document.getElementById('ft-'+x).classList.toggle('active',x===f);});
+  document.getElementById('colab-detail-container').innerHTML='';
+  renderEscalasList();
+}
+function renderEscalasList(){
+  const el=document.getElementById('escalas-list');
+  let list=escalasDB;
+  if(escalasFilter==='abertas')list=escalasDB.filter(e=>e.status==='aberta');
+  else if(escalasFilter==='fechadas')list=escalasDB.filter(e=>e.status==='fechada');
+  // summary chips
+  const ab=escalasDB.filter(e=>e.status==='aberta').length;
+  const fc2=escalasDB.filter(e=>e.status==='fechada').length;
+  const sc=document.getElementById('escalas-summary-chips');
+  if(sc)sc.innerHTML=`<span class="badge bad" style="font-size:11px;padding:4px 10px">${ab} aberta${ab!==1?'s':''}</span><span class="badge be" style="font-size:11px;padding:4px 10px">${fc2} fechada${fc2!==1?'s':''}</span>`;
+  if(!list.length){
+    el.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><h3>Nenhuma escala ${escalasFilter==='abertas'?'aberta':escalasFilter==='fechadas'?'fechada':''}</h3><p>Gere uma escala na aba <strong>Operações</strong> e salve-a para que ela apareça aqui.</p></div>`;
+    buildFunnel(); return;
+  }
+  el.innerHTML=list.slice().reverse().map(esc=>{
+    const[y,m,d]=esc.date.split('-');
+    const mNome=MESES[parseInt(m)-1];
+    const pilotos=Object.values(esc.escala).filter(x=>x.piloto).length;
+    const tCops=Object.values(esc.escala).reduce((a,x)=>a+x.copilotos.length,0);
+    const xpTotal=Object.values(esc.xpCreditado||{}).reduce((a,v)=>a+Object.values(v).reduce((b,w)=>b+w,0),0);
+    const delBtn=canEdit()?`<button class="btn btn-sm bd" onclick="confirmarDeleteEscala('${esc.id}')" title="Excluir esta escala">🗑</button>`:'';
+    const acoes=esc.status==='aberta'?
+      `<button class="btn btn-sm bpu" onclick="openImport('${esc.id}')">⬆ Importar</button>
+       <button class="btn btn-sm" onclick="verDetalhesEscala('${esc.id}')">Detalhes</button>
+       ${delBtn}`:
+      `<button class="btn btn-sm" onclick="verDetalhesEscala('${esc.id}')">Ver detalhes</button>
+       <span style="font-size:11px;color:var(--gr);font-weight:500;white-space:nowrap">+${xpTotal} XP</span>
+       ${delBtn}`;
+    // build collaborator pills
+    const colabPills=[];
+    Object.entries(esc.escala).forEach(([serv,slot])=>{
+      if(slot.piloto)colabPills.push(`<span class="ec-colab-pill piloto" title="Piloto — ${serv}" onclick="showColabDetail('${escQ(slot.piloto)}','${esc.id}',event)"><span class="pill-av">${initials(slot.piloto)}</span>${slot.piloto}<span class="pill-badge">P</span></span>`);
+      (slot.copilotos||[]).forEach(cp=>colabPills.push(`<span class="ec-colab-pill" title="Co-piloto — ${serv}" onclick="showColabDetail('${escQ(cp)}','${esc.id}',event)"><span class="pill-av">${initials(cp)}</span>${cp}</span>`));
+    });
+    const totalColabs=colabPills.length;
+    return `<div class="escala-card ${esc.status}" id="ecard-${esc.id}">
+      <div class="ec-top">
+        <div class="ec-date-block"><div class="ec-date">${d}</div><div class="ec-month">${mNome.slice(0,3)}</div></div>
+        <div class="ec-sep"></div>
+        <div class="ec-body">
+          <div class="ec-title">Escala de ${d}/${m}/${y} <span class="badge ${esc.status==='aberta'?'bad':'be'}">${esc.status==='aberta'?'Aberta':'Fechada'}</span></div>
+          <div class="ec-meta">
+            <span>👥 ${esc.presentes.length} presentes</span>
+            <span>✈ ${pilotos} pilotos</span>
+            <span>🔧 ${tCops} co-pilotos</span>
+            ${esc.chamadas.length?`<span>📋 ${esc.chamadas.length} chamadas</span>`:''}
+          </div>
+        </div>
+        <div class="ec-actions">${acoes}</div>
+      </div>
+      ${totalColabs?`<button class="ec-expand" onclick="toggleColabGrid('${esc.id}',this)">▸ Ver ${totalColabs} colaborador${totalColabs!==1?'es':''} — clique para detalhar tickets</button>
+      <div class="ec-colab-grid" id="ecg-${esc.id}">${colabPills.join('')}</div>`:''}
+    </div>`;
+  }).join('');
+  buildFunnel();
+}
+function toggleColabGrid(id,btn){
+  const grid=document.getElementById('ecg-'+id);
+  if(!grid)return;
+  const open=grid.classList.toggle('open');
+  btn.textContent=open?'▾ Ocultar colaboradores — clique num nome para ver tickets':'▸ '+btn.textContent.replace(/^[▸▾] /,'');
+}
+function showColabDetail(nome,escId,event){
+  event&&event.stopPropagation();
+  const esc=escalasDB.find(e=>e.id===escId);
+  if(!esc)return;
+  // find setor
+  let setor='—';
+  let role='Co-piloto';
+  Object.entries(esc.escala).forEach(([s,slot])=>{
+    if(slot.piloto===nome){setor=s;role='Piloto';}
+    if(slot.copilotos.includes(nome)){setor=s;role='Co-piloto';}
+  });
+  const tickets=esc.chamadas.filter(ch=>ch.atribuido===nome);
+  const totalXP=tickets.reduce((a,c)=>a+c.xp,0);
+  const container=document.getElementById('colab-detail-container');
+  if(!container)return;
+  // scroll to detail
+  const ticketsHtml=tickets.length?tickets.map(ch=>{
+    const cls=(ch.classificacao||'C').toUpperCase();
+    return `<div class="cdp-ticket">
+      <span class="cdp-ticket-id">#${ch.id_ticket}</span>
+      <span class="cdp-ticket-title" title="${ch.titulo||ch.id_ticket}">${ch.titulo||ch.id_ticket}</span>
+      <div class="cdp-ticket-meta">
+        <span class="badge xp-${cls.toLowerCase()}">${cls}</span>
+        <span style="color:var(--mu)">${ch.servico}</span>
+        ${ch.duracao?`<span>⏱${ch.duracao}</span>`:''}
+        <span style="color:var(--gr);font-weight:600;font-family:monospace">+${ch.xp} XP</span>
+      </div>
+    </div>`;
+  }).join(''):
+  `<div style="text-align:center;padding:20px;color:var(--mu);font-size:12px">
+    <div style="font-size:24px;margin-bottom:8px">🎫</div>
+    Nenhum ticket atribuído a este colaborador nesta escala.
+  </div>`;
+  const[y,m,d]=esc.date.split('-');
+  container.innerHTML=`<div class="colab-detail-panel">
+    <div class="cdp-header">
+      <div class="cdp-av">${initials(nome)}</div>
+      <div>
+        <div class="cdp-name">${nome}</div>
+        <div class="cdp-sub">${role} · ${setor} · Escala ${d}/${m}/${y}</div>
+      </div>
+      <button class="btn btn-sm" style="margin-left:auto" onclick="document.getElementById('colab-detail-container').innerHTML=''">✕ Fechar</button>
+    </div>
+    <div class="cdp-stats">
+      <div class="cdp-stat"><div class="cdp-stat-val">${tickets.length}</div><div class="cdp-stat-lbl">Tickets</div></div>
+      <div class="cdp-stat"><div class="cdp-stat-val" style="color:var(--gr)">+${totalXP}</div><div class="cdp-stat-lbl">XP ganho</div></div>
+      <div class="cdp-stat"><div class="cdp-stat-val" style="color:var(--pu)">${tickets.filter(t=>(t.classificacao||'C')==='A').length}</div><div class="cdp-stat-lbl">Classe A</div></div>
+      <div class="cdp-stat"><div class="cdp-stat-val" style="font-size:13px">${role}</div><div class="cdp-stat-lbl">Função</div></div>
+    </div>
+    <div style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Tickets atendidos</div>
+    <div class="cdp-tickets">${ticketsHtml}</div>
+  </div>`;
+  container.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function verDetalhesEscala(id){
+  const esc=escalasDB.find(e=>e.id===id);
+  if(!esc)return;
+  const[y,m,d]=esc.date.split('-');
+  document.getElementById('ed-title').textContent=`Escala ${d}/${m}/${y} — ${esc.status==='aberta'?'Aberta':'Fechada'}`;
+  const setoresAtivos=SERVICOS.filter(s=>esc.escala[s]&&(esc.escala[s].piloto||esc.escala[s].copilotos.length));
+  let html=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+    <div class="sc"><div class="sl">Presentes</div><div class="sv bl">${esc.presentes.length}</div></div>
+    <div class="sc"><div class="sl">Setores ativos</div><div class="sv">${setoresAtivos.length}</div></div>
+    <div class="sc"><div class="sl">Chamadas</div><div class="sv gr">${esc.chamadas.length}</div></div>
+  </div>`;
+  html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">`;
+  setoresAtivos.forEach(s=>{
+    const{piloto,copilotos}=esc.escala[s];
+    let fortiExtra='';
+    if(s==='Fortinet'){
+      const levelOrder=['E','D','C','B','A'];
+      const levelAssign={A:[],B:[],C:[],D:[],E:[]};
+      copilotos.forEach((cp,i)=>{const lv=levelOrder[i%levelOrder.length];levelAssign[lv].push(cp);});
+      fortiExtra=`<div style="margin-top:8px;border-top:1px solid var(--b);padding-top:6px">
+        <div style="font-size:9px;font-weight:600;color:var(--mu);text-transform:uppercase;margin-bottom:4px">Níveis Fortinet</div>
+        ${Object.entries(FORTINET_LEVELS).map(([lv,cfg])=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;font-size:10px">
+          <span class="fl-badge ${cfg.color}" style="width:18px;height:18px;font-size:9px">${lv}</span>
+          <span style="color:var(--mu)">${cfg.time}</span>
+          ${(levelAssign[lv]||[]).length?`<span style="color:var(--tx);font-weight:500">${levelAssign[lv].join(', ')}</span>`:'<span style="color:var(--mu);font-style:italic">—</span>'}
+        </div>`).join('')}
+      </div>`;
+    }
+    html+=`<div class="cal-team-card">
+      <div class="cal-team-name">${s}</div>
+      <div style="font-size:11px;margin-bottom:4px"><strong>Piloto:</strong> ${piloto||'Sessão coletiva'}</div>
+      ${copilotos.length?`<div style="font-size:10px;color:var(--mu)">Co-pilotos: ${copilotos.join(', ')}</div>`:''}
+      ${fortiExtra}
+    </div>`;
+  });
+  html+='</div>';
+  if(esc.chamadas.length){
+    html+=`<div class="sep"></div><div style="font-size:12px;font-weight:600;margin-bottom:8px">Chamadas importadas (${esc.chamadas.length})</div>`;
+    html+=`<div style="max-height:220px;overflow-y:auto">`;
+    esc.chamadas.forEach(ch=>{
+      const cls=XP_CLASS[ch.classificacao]||XP_CLASS['C'];
+      html+=`<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border:1px solid var(--b);border-radius:5px;margin-bottom:4px;font-size:11px">
+        <span class="badge xp-${(ch.classificacao||'C').toLowerCase()}">${ch.classificacao||'C'}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${ch.titulo||ch.id_ticket}</span>
+        <span style="color:var(--mu)">${ch.servico}</span>
+        <span style="color:var(--blue);font-weight:600">${ch.atribuido||'—'}</span>
+        <span style="color:var(--gr);font-family:monospace">+${ch.xp||0} XP</span>
+      </div>`;
+    });
+    html+='</div>';
+  }
+  document.getElementById('ed-body').innerHTML=html;
+  openMd('escala-detail');
+}
+
+// ─── IMPORT CHAMADAS ─────────────────────────────────────────
+function calcXP(row){
+  const cls=XP_CLASS[row.classificacao]||XP_CLASS['C'];
+  let xp=cls.base;
+  if(row.categoria&&row.categoria.toLowerCase().includes('problem'))xp=Math.round(xp*cls.multProblema);
+  // duração ≥ 30 min
+  if(row.duracao){
+    const parts=String(row.duracao).split(':');
+    if(parts.length>=2){const mins=parseInt(parts[0]||0)*60+parseInt(parts[1]||0);if(mins>=30)xp+=2;}
+  }
+  if(String(row.problema_nosso||'').toUpperCase()==='SIM')xp+=1;
+  return Math.max(1,Math.round(xp));
+}
+
+function openImport(escalaid){
+  importEscalaId=escalaid;
+  const esc=escalasDB.find(e=>e.id===escalaid);
+  if(!esc)return;
+  const[y,m,d]=esc.date.split('-');
+  document.getElementById('import-title').textContent=`Importar chamadas — Escala ${d}/${m}/${y}`;
+  document.getElementById('import-body').innerHTML=renderImportStep1(esc);
+  document.getElementById('import-actions').innerHTML=`<button class="btn" onclick="closeMd('import')">Cancelar</button>`;
+  openMd('import');
+}
+
+function renderImportStep1(esc){
+  return `
+  <p style="font-size:12px;color:var(--mu);margin-bottom:16px">Carregue o relatório Excel de chamadas do dia. O sistema associará automaticamente cada ticket ao co-piloto do setor correspondente.</p>
+  <div class="drop-zone" id="dz" onclick="document.getElementById('fi').click()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleFileDrop(event)">
+    <div class="dz-icon">📊</div>
+    <p>Arraste o arquivo Excel aqui</p>
+    <strong>ou clique para selecionar</strong>
+    <p style="margin-top:8px;font-size:11px">Formato esperado: .xlsx com colunas colaborador, servico, classificacao, categoria, duracao, problema_nosso, id_ticket, titulo</p>
+  </div>
+  <input type="file" id="fi" accept=".xlsx,.xls" style="display:none" onchange="handleFileInput(this)">`;
+}
+
+function handleFileDrop(e){
+  e.preventDefault();
+  document.getElementById('dz').classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f)processXLSX(f);
+}
+function handleFileInput(inp){if(inp.files[0])processXLSX(inp.files[0]);}
+
+function processXLSX(file){
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){toast('Arquivo vazio ou formato inválido.','r');return;}
+      // dedup por id_ticket (cada ticket pode ter 2 linhas: header + conteúdo)
+      const dedupMap=new Map();
+      rows.forEach(row=>{
+        const tid=String(row.id_ticket||row['id_ticket']||'');
+        const colab=String(row.colaborador||row['colaborador']||'').trim();
+        const serv=String(row.servico||row['servico']||'').trim();
+        const duracao=String(row.duracao||row['duracao']||'').trim();
+        if(!tid||!colab)return;
+        if(!dedupMap.has(tid)){
+          dedupMap.set(tid,{
+            id_ticket:tid, colaborador:colab, servico:serv,
+            classificacao:String(row.classificacao||row['classificacao']||'C').trim().toUpperCase(),
+            categoria:String(row.categoria||row['categoria']||'').trim(),
+            duracao:'', problema_nosso:String(row.problema_nosso||row['problema_nosso']||'').trim().toUpperCase(),
+            titulo:String(row.titulo||row['titulo']||'').trim()
+          });
+        }
+        // prefer the row WITH duracao
+        if(duracao&&duracao!=='nan')dedupMap.get(tid).duracao=duracao;
+      });
+      importChamadas=[...dedupMap.values()];
+      renderImportReview();
+    } catch(err){toast('Erro ao ler arquivo: '+err.message,'r');}
+  };
+  reader.readAsBinaryString(file);
+}
+
+// Associação automática: colaborador do ticket que está na escala (como copiloto ou piloto)
+function autoAssociar(ch,esc){
+  const servico=ch.servico;
+  const colab=ch.colaborador;
+  // O colaborador está presente? E na escala desse setor?
+  if(!esc.presentes.includes(colab))return null;
+  // Verifica se está como piloto ou copiloto nesse setor
+  const slot=esc.escala[servico];
+  if(slot){
+    if(slot.piloto===colab)return colab;
+    if(slot.copilotos.includes(colab))return colab;
+  }
+  // Está presente mas não nesse setor — retorna o colaborador mesmo assim (XP vai para o setor correto)
+  if(esc.presentes.includes(colab))return colab;
+  return null;
+}
+
+function renderImportReview(){
+  const esc=escalasDB.find(e=>e.id===importEscalaId);
+  if(!esc)return;
+  // auto-associar
+  importChamadas.forEach(ch=>{
+    if(!ch.atribuido)ch.atribuido=autoAssociar(ch,esc)||'';
+    ch.xp=calcXP(ch);
+    ch.xpOverride=undefined; // reset overrides on new import
+    ch._editOpen=false;
+  });
+  const matched=importChamadas.filter(c=>c.atribuido).length;
+  const total=importChamadas.length;
+  const totalXP=importChamadas.filter(c=>c.atribuido).reduce((a,c)=>a+(c.xpOverride!==undefined?c.xpOverride:c.xp),0);
+  const supNote=canEdit()?`<div style="display:flex;align-items:center;gap:7px;background:var(--pu-l);border:1px solid var(--pu);border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11px;color:var(--pu)"><strong>🛡 Modo Supervisor</strong> — você pode editar descrições, ajustar XP e excluir tickets antes de confirmar.</div>`:'';
+  document.getElementById('import-body').innerHTML=`
+    <div class="import-summary">
+      <div class="is-card"><div class="is-val" style="color:var(--blue)">${total}</div><div class="is-label">Tickets</div></div>
+      <div class="is-card"><div class="is-val" style="color:var(--gr)">${matched}</div><div class="is-label">Associados</div></div>
+      <div class="is-card"><div class="is-val" style="color:var(--rd)">${total-matched}</div><div class="is-label">Pendentes</div></div>
+      <div class="is-card"><div class="is-val" style="color:var(--pu)">${totalXP}</div><div class="is-label">XP total</div></div>
+    </div>
+    ${supNote}
+    <div style="font-size:12px;color:var(--mu);margin-bottom:10px">Revise as associações. Tickets pendentes precisam de atribuição manual.</div>
+    <div class="chamadas-container" id="chamadas-list"></div>`;
+  document.getElementById('import-actions').innerHTML=`
+    <button class="btn" onclick="closeMd('import')">Cancelar</button>
+    <button class="btn bp" onclick="confirmarImport()">Confirmar e creditar XP</button>`;
+  renderChamadasList();
+}
+
+function renderChamadasList(){
+  const esc=escalasDB.find(e=>e.id===importEscalaId);
+  if(!esc)return;
+  const el=document.getElementById('chamadas-list');
+  if(!el)return;
+  const isPriv=canEdit();
+  el.innerHTML=importChamadas.map((ch,i)=>{
+    const cls=(ch.classificacao||'C').toUpperCase();
+    const matched=!!ch.atribuido;
+    const dur=ch.duracao?`${ch.duracao}`:'—';
+    const recXP=ch.xp; // valor recomendado pelo sistema
+    const finalXP=ch.xpOverride!==undefined?ch.xpOverride:recXP;
+    const xpEdited=ch.xpOverride!==undefined&&ch.xpOverride!==recXP;
+    const opts=`<option value="">— Atribuir a —</option>`+
+      esc.presentes.map(p=>`<option value="${escQ(p)}" ${ch.atribuido===p?'selected':''}>${p}</option>`).join('');
+    const xpControl=isPriv
+      ? `<span class="sup-badge">SUP</span><input class="xp-input${xpEdited?' edited':''}" type="number" min="0" max="999" value="${finalXP}" title="XP recomendado: ${recXP} — editável" onchange="setXPOverride(${i},this.value)" oninput="this.classList.toggle('edited',parseInt(this.value)!==${recXP})">`
+      : `<span style="font-family:monospace;font-size:12px;font-weight:700;color:var(--gr)">+${finalXP} XP</span>`;
+    const supBtns=isPriv?`<button class="btn-edit-desc" onclick="toggleDescEdit(${i})" title="Editar descrição">✎</button><button class="btn-del-ticket" onclick="delTicket(${i})" title="Excluir ticket">✕</button>`:'';
+    return `<div class="chamada-row ${matched?'matched':'unmatched'}" id="crow-${i}">
+      <span class="ch-ticket">#${ch.id_ticket}</span>
+      <div class="ch-body">
+        <div class="ch-title" id="ch-title-${i}">${ch.titulo||ch.id_ticket}</div>
+        <div class="ch-meta">
+          <span class="badge xp-${cls.toLowerCase()}">${cls}</span>
+          <span>${ch.servico}</span>
+          <span>⏱ ${dur}</span>
+          ${ch.categoria?`<span>${ch.categoria}</span>`:''}
+          ${String(ch.problema_nosso||'').toUpperCase()==='SIM'?'<span style="color:var(--rd)">⚠ Prob. nosso</span>':''}
+        </div>
+      </div>
+      <div class="sup-ctrl">${xpControl}${supBtns}</div>
+      <select class="ch-select" onchange="atribuirChamada(${i},this.value)">${opts}</select>
+      <textarea class="desc-edit${ch._editOpen?' show':''}" id="desc-edit-${i}" rows="3" placeholder="Editar descrição do chamado..." onblur="saveDescEdit(${i},this.value)">${ch.titulo||ch.id_ticket}</textarea>
+    </div>`;
+  }).join('');
+}
+
+function toggleDescEdit(i){
+  importChamadas[i]._editOpen=!importChamadas[i]._editOpen;
+  const ta=document.getElementById('desc-edit-'+i);
+  if(ta)ta.classList.toggle('show',!!importChamadas[i]._editOpen);
+}
+function saveDescEdit(i,val){
+  if(!canEdit())return;
+  importChamadas[i].titulo=val.trim()||importChamadas[i].titulo;
+  const el=document.getElementById('ch-title-'+i);
+  if(el)el.textContent=importChamadas[i].titulo;
+}
+function setXPOverride(i,val){
+  if(!canEdit())return;
+  const v=Math.max(0,parseInt(val)||0);
+  importChamadas[i].xpOverride=v;
+  // update summary
+  updImportSummary();
+}
+function delTicket(i){
+  if(!canEdit())return;
+  importChamadas.splice(i,1);
+  renderChamadasList();
+  updImportSummary();
+  toast('Ticket removido.','g');
+}
+function confirmarDeleteEscala(id){
+  if(!canEdit()){toast('Sem permissão.','r');return;}
+  const esc=escalasDB.find(e=>e.id===id);
+  if(!esc)return;
+  const[y,m,d]=esc.date.split('-');
+  if(!confirm(`Tem certeza que deseja EXCLUIR a escala de ${d}/${m}/${y}?\n\nEsta ação não pode ser desfeita. O XP creditado NÃO será revertido.`))return;
+  const idx=escalasDB.findIndex(e=>e.id===id);
+  if(idx!==-1)escalasDB.splice(idx,1);
+  // remove from calendar too
+  if(calEscalas[esc.date])delete calEscalas[esc.date];
+  document.getElementById('colab-detail-container').innerHTML='';
+  renderEscalasList();
+  updStats();
+  toast(`Escala de ${d}/${m}/${y} excluída.`,'r');
+}
+function updImportSummary(){
+  const matched=importChamadas.filter(c=>c.atribuido).length;
+  const total=importChamadas.length;
+  const totalXP=importChamadas.filter(c=>c.atribuido).reduce((a,c)=>a+(c.xpOverride!==undefined?c.xpOverride:c.xp),0);
+  const cards=document.querySelectorAll('.is-card .is-val');
+  if(cards[0])cards[0].textContent=total;
+  if(cards[1])cards[1].textContent=matched;
+  if(cards[2])cards[2].textContent=total-matched;
+  if(cards[3])cards[3].textContent=totalXP;
+}
+
+function atribuirChamada(i,val){
+  importChamadas[i].atribuido=val;
+  importChamadas[i].xp=calcXP(importChamadas[i]);
+  updImportSummary();
+  // update row style
+  const rows=document.querySelectorAll('.chamada-row');
+  if(rows[i]){rows[i].classList.toggle('matched',!!val);rows[i].classList.toggle('unmatched',!val);}
+  // update xp display if not supervisor
+  if(!canEdit()){
+    const xpEl=rows[i]?.querySelector('span[style*="monospace"]');
+    if(xpEl)xpEl.textContent=`+${importChamadas[i].xp} XP`;
+  } else {
+    // update recommended value hint but keep override field
+    const inp=rows[i]?.querySelector('.xp-input');
+    if(inp&&importChamadas[i].xpOverride===undefined){
+      inp.value=importChamadas[i].xp;
+      inp.title=`XP recomendado: ${importChamadas[i].xp} — editável`;
+    }
+  }
+}
+
+function confirmarImport(){
+  const esc=escalasDB.find(e=>e.id===importEscalaId);
+  if(!esc)return;
+  const chAtrib=importChamadas.filter(c=>c.atribuido);
+  if(!chAtrib.length){toast('Nenhum ticket atribuído.','r');return;}
+  // salvar chamadas na escala
+  esc.chamadas=[...importChamadas];
+  // calcular e creditar XP
+  const xpCred={};
+  let promovidos=0;
+  chAtrib.forEach(ch=>{
+    const colab=ch.atribuido;
+    const serv=ch.servico;
+    if(!xpData[colab]){xpData[colab]={};SERVICOS.forEach(s=>xpData[colab][s]=0);}
+    if(xpData[colab][serv]===undefined)xpData[colab][serv]=0;
+    const antes=xpData[colab][serv];
+    const xpFinal=ch.xpOverride!==undefined?ch.xpOverride:ch.xp;
+    xpData[colab][serv]+=xpFinal;
+    if(antes<XP_THR&&xpData[colab][serv]>=XP_THR)promovidos++;
+    if(!xpCred[colab])xpCred[colab]={};
+    xpCred[colab][serv]=(xpCred[colab][serv]||0)+xpFinal;
+  });
+  esc.xpCreditado=xpCred;
+  esc.status='fechada';
+  importChamadas=[];
+  importEscalaId=null;
+  closeMd('import');
+  renderTable(); updStats(); renderEscalasList();
+  const totalXP=Object.values(xpCred).reduce((a,v)=>a+Object.values(v).reduce((b,w)=>b+w,0),0);
+  toast(promovidos>0?`XP creditado! +${totalXP} XP · ${promovidos} nova(s) promoção(ões)! 🎉`:`XP creditado! +${totalXP} XP distribuídos.`,'g');
+}
+
+// ─── CALENDAR ────────────────────────────────────────────────
+function dateKey(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+function todayKey(){const n=new Date();return dateKey(n.getFullYear(),n.getMonth(),n.getDate());}
+function fmtDate(key){const[y,m,d]=key.split('-');return`${d}/${m}/${y}`;}
+function fmtDateLong(key){const[y,m,d]=key.split('-');return`${parseInt(d)} de ${MESES[parseInt(m)-1]} de ${y}`;}
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}if(calYear<2026||(calYear===2026&&calMonth<0)){calYear=2026;calMonth=0;}renderCal();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCal();}
+function calToday(){const n=new Date();calYear=Math.max(2026,n.getFullYear());calMonth=calYear===2026?Math.max(0,n.getMonth()):n.getMonth();renderCal();}
+function renderCal(){
+  document.getElementById('cal-title').textContent=`${MESES[calMonth]} ${calYear}`;
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  const first=new Date(calYear,calMonth,1);const startDow=first.getDay();
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const prevDays=new Date(calYear,calMonth,0).getDate();
+  const tKey=todayKey();
+  for(let i=startDow-1;i>=0;i--){const cell=document.createElement('div');cell.className='cal-cell other-month';const d=prevDays-i;const m=calMonth-1<0?11:calMonth-1;const y=calMonth-1<0?calYear-1:calYear;cell.innerHTML=`<div class="cal-day-num">${d}</div>`;cell.onclick=()=>selectCalDate(dateKey(y,m,d));grid.appendChild(cell);}
+  for(let d=1;d<=daysInMonth;d++){
+    const key=dateKey(calYear,calMonth,d);
+    const dbE=escalasDB.filter(e=>e.date===key);
+    const hasEsc=!!calEscalas[key]||dbE.length>0;
+    const cell=document.createElement('div');
+    cell.className='cal-cell'+(key===tKey?' today':'')+(hasEsc?' has-escala':'')+(calSelectedDate===key?' selected':'');
+    const n=dbE.length>0?dbE[0].presentes.length:(calEscalas[key]?.presentes?.length||0);
+    const pLen=dbE.length>0?Object.values(dbE[0].escala).filter(x=>x.piloto).length:(hasEsc?Object.values(calEscalas[key].escala).filter(x=>x.piloto).length:0);
+    const count=dbE.length>1?`${dbE.length} escalas`:n?`${n} pres.`:'';
+    cell.innerHTML=`<div class="cal-day-num">${d}</div>${hasEsc?`<div class="cal-ev-pill has-escala">✓ ${count}${pLen?' · '+pLen+' set.':''}</div>`:''}`;
+    cell.onclick=()=>selectCalDate(key);
+    grid.appendChild(cell);
+  }
+  const total=startDow+daysInMonth;const rem=total%7===0?0:7-total%7;
+  for(let d=1;d<=rem;d++){const m=calMonth+1>11?0:calMonth+1;const y=calMonth+1>11?calYear+1:calYear;const cell=document.createElement('div');cell.className='cal-cell other-month';cell.innerHTML=`<div class="cal-day-num">${d}</div>`;cell.onclick=()=>selectCalDate(dateKey(y,m,d));grid.appendChild(cell);}
+  buildFunnel();
+}
+function selectCalDate(key){calSelectedDate=key;calFilterS=null;renderCal();renderCalSidebar();}
+function renderCalSidebar(){
+  if(!calSelectedDate){document.getElementById('cal-side-title').textContent='Selecione um dia';document.getElementById('cal-detail').innerHTML='<div class="cal-empty"><div style="font-size:28px;margin-bottom:8px">📅</div><div>Selecione um dia no calendário para visualizar a escala.</div></div>';return;}
+  document.getElementById('cal-side-title').textContent=fmtDateLong(calSelectedDate);
+  // Look for escala in escalasDB first, then calEscalas
+  const dbEsc=escalasDB.filter(e=>e.date===calSelectedDate);
+  const saved=calEscalas[calSelectedDate];
+  const hasAny=dbEsc.length>0||saved;
+  document.getElementById('cal-side-sub').textContent=hasAny?(dbEsc.length?`${dbEsc.length} escala(s) salva(s) neste dia`:`${saved.presentes.length} técnico(s) presente(s)`):'Nenhuma escala neste dia';
+  renderCalDetail();
+}
+function renderCalDetail(){
+  const el=document.getElementById('cal-detail');
+  // check escalasDB first
+  const dbEscs=escalasDB.filter(e=>e.date===calSelectedDate);
+  const saved=calEscalas[calSelectedDate];
+  if(!dbEscs.length&&!saved){
+    el.innerHTML=`<div class="cal-empty"><div style="font-size:24px;margin-bottom:8px">📅</div><div>Nenhuma escala para este dia.<br><span style="font-size:10px;color:var(--mu)">Gere uma escala na aba Operações e atribua a esta data.</span></div></div>`;
+    return;
+  }
+  let html='';
+  // show escalasDB entries
+  if(dbEscs.length){
+    dbEscs.forEach(e=>{
+      const setoresAtivos=SERVICOS.filter(s=>e.escala[s]&&(e.escala[s].piloto||e.escala[s].copilotos.length));
+      const[y,m,d]=e.date.split('-');
+      html+=`<div style="background:var(--off);border-radius:var(--r);padding:10px 12px;margin-bottom:10px;border:1px solid var(--b)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:11px;font-weight:600">Escala ${d}/${m}/${y}</span>
+          <span class="badge ${e.status==='aberta'?'bad':'be'}">${e.status==='aberta'?'Aberta':'Fechada'}</span>
+        </div>
+        <div style="font-size:10px;color:var(--mu);margin-bottom:8px">👥 ${e.presentes.length} presentes · ✈ ${Object.values(e.escala).filter(x=>x.piloto).length} pilotos · 🔧 ${Object.values(e.escala).reduce((a,x)=>a+x.copilotos.length,0)} co-pilotos</div>`;
+      const toShow=calFilterS?[calFilterS]:setoresAtivos;
+      if(toShow.length>1)html+=`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:8px"><button class="chip chip-sm${!calFilterS?' on':''}" onclick="calFilterS=null;renderCalDetail()">Todos</button>${setoresAtivos.map(s=>`<button class="chip chip-sm${calFilterS===s?' on':''}" onclick="calFilterS='${s}';renderCalDetail()">${s}</button>`).join('')}</div>`;
+      toShow.forEach(s=>{
+        const{piloto,copilotos}=e.escala[s]||{};
+        if(!piloto&&!(copilotos||[]).length)return;
+        html+=`<div class="cal-team-card"><div class="cal-team-name">${s}</div>
+          <div class="cal-pilot-row"><span class="cal-pilot-label">Piloto</span>${piloto?`<div class="cal-mini-av">${initials(piloto)}</div><span class="cal-mini-name">${piloto}</span>`:'<span style="font-size:10px;color:var(--mu);font-style:italic">Sessão coletiva</span>'}</div>
+          <div class="cal-cp-row"><span class="cal-cp-label">Co-pilotos</span><div style="flex:1">${(copilotos||[]).length?copilotos.map(cp=>`<div class="cal-cp-list-item"><div class="cal-mini-av g">${initials(cp)}</div><span class="cal-mini-name">${cp}</span></div>`).join(''):'<span style="font-size:10px;color:var(--mu);font-style:italic">Sem co-piloto</span>'}</div></div>
+        </div>`;
+      });
+      html+='</div>';
+    });
+  } else if(saved){
+    // legacy calEscalas fallback
+    const{escala:esc,naoAlocados:na}=saved;
+    if(na&&na.length)html+=`<div class="cal-unalloc"><div class="cal-unalloc-title">⚠ Sem vaga (${na.length})</div><div style="display:flex;flex-wrap:wrap;gap:4px">${na.map(n=>`<span class="unalloc-pill" style="font-size:10px;padding:2px 7px"><div class="cal-mini-av g">${initials(n)}</div>${n}</span>`).join('')}</div></div>`;
+    const ativos=SERVICOS.filter(s=>esc[s]&&(esc[s].piloto||esc[s].copilotos.length));
+    if(ativos.length>1)html+=`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px"><button class="chip chip-sm${!calFilterS?' on':''}" onclick="calFilterS=null;renderCalDetail()">Todos</button>${ativos.map(s=>`<button class="chip chip-sm${calFilterS===s?' on':''}" onclick="calFilterS='${s}';renderCalDetail()">${s}</button>`).join('')}</div>`;
+    const toShow=calFilterS?[calFilterS]:ativos;
+    if(!toShow.length)html+='<div class="cal-empty">Nenhum setor ativo.</div>';
+    else toShow.forEach(s=>{
+      const{piloto,copilotos}=esc[s]||{};
+      html+=`<div class="cal-team-card"><div class="cal-team-name">${s}</div>
+        <div class="cal-pilot-row"><span class="cal-pilot-label">Piloto</span>${piloto?`<div class="cal-mini-av">${initials(piloto)}</div><span class="cal-mini-name">${piloto}</span>`:'<span style="font-size:10px;color:var(--mu);font-style:italic">Sessão coletiva</span>'}</div>
+        <div class="cal-cp-row"><span class="cal-cp-label">Co-pilotos</span><div style="flex:1">${(copilotos||[]).length?copilotos.map(cp=>`<div class="cal-cp-list-item"><div class="cal-mini-av g">${initials(cp)}</div><span class="cal-mini-name">${cp}</span></div>`).join(''):'<span style="font-size:10px;color:var(--mu);font-style:italic">Sem co-piloto</span>'}</div></div>
+      </div>`;
+    });
+  }
+  el.innerHTML=html;
+}
+function onCalDragStart(e){const el=e.currentTarget;dragData={nome:el.dataset.name,from:el.dataset.from,ctx:'cal'};el.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
+
+// ─── CLICK OUTSIDE MODALS ─────────────────────────────────
+document.querySelectorAll('.mbg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');}));
+</script>
+</body>
+</html>
